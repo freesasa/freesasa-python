@@ -1,0 +1,5 @@
+build
+dist
+freesasa.egg-info
+*~
+freesasa.c
