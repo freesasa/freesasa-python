@@ -3,8 +3,8 @@ from Cython.Build import cythonize, build_ext
 from glob import glob
 
 # not using wild cards because we're leaving out xml and json
-sources = list(map(lambda file: "./src/" + file,
-              ["classifier.c", 
+sources = list(map(lambda file: "./lib/src/" + file,
+              ["classifier.c",
                "classifier_protor.c", "classifier_oons.c", "classifier_naccess.c",
                "coord.c", "freesasa.c", "lexer.c", "log.c",
                "nb.c", "node.c", "parser.c",
@@ -43,8 +43,8 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python 2.7',
-        'Programming Language :: Python 3', 
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
     ],
     setup_requires=['cython>=0.21']
 )
