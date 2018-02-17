@@ -48,7 +48,7 @@ class FreeSASATestCase(unittest.TestCase):
         p.setNThreads(2)
         self.assertTrue(p.nThreads() == 2)
         self.assertRaises(AssertionError, lambda: p.setNThreads(0))
-        
+
     def testResult(self):
         r = Result()
         self.assertRaises(AssertionError,lambda: r.totalArea())
@@ -62,17 +62,17 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertTrue(c.radius("ALA"," CB ") == 1.88)
 
         setVerbosity(silent)
-        self.assertRaises(Exception,lambda: Classifier("data/err.config"))
+        self.assertRaises(Exception,lambda: Classifier("lib/tests/data/err.config"))
         self.assertRaises(IOError,lambda: Classifier(""))
         setVerbosity(normal)
 
-        c = Classifier("data/test.config")
+        c = Classifier("lib/tests/data/test.config")
         self.assertTrue(c.classify("AA","aa") == "Polar")
         self.assertTrue(c.classify("BB","bb") == "Apolar")
         self.assertTrue(c.radius("AA","aa") == 1.0)
         self.assertTrue(c.radius("BB","bb") == 2.0)
 
-        c = Classifier("share/oons.config")
+        c = Classifier("lib/share/oons.config")
         self.assertTrue(c.radius("ALA"," CB ") == 2.00)
 
         c = DerivedClassifier()
@@ -85,12 +85,12 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertRaises(IOError,lambda: Structure("xyz#$%"))
         setVerbosity(silent)
         # test any file that's not a PDB file
-        self.assertRaises(Exception,lambda: Structure("data/err.config")) 
-        self.assertRaises(Exception,lambda: Structure("data/empty.pdb"))
-        self.assertRaises(Exception,lambda: Structure("data/empty_model.pdb"))
+        self.assertRaises(Exception,lambda: Structure("lib/tests/data/err.config"))
+        self.assertRaises(Exception,lambda: Structure("lib/tests/data/empty.pdb"))
+        self.assertRaises(Exception,lambda: Structure("lib/tests/data/empty_model.pdb"))
         setVerbosity(normal)
 
-        s = Structure("data/1ubq.pdb")
+        s = Structure("lib/tests/data/1ubq.pdb")
         self.assertTrue(s.nAtoms() == 602)
         self.assertTrue(s.radius(1) == 1.88)
         self.assertTrue(s.chainLabel(1) == 'A')
@@ -98,15 +98,15 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertTrue(s.residueName(1) == 'MET')
         self.assertTrue(s.residueNumber(1) == '   1 ')
 
-        s2 = Structure("data/1ubq.pdb",Classifier("share/oons.config"))
+        s2 = Structure("lib/tests/data/1ubq.pdb",Classifier("lib/share/oons.config"))
         self.assertTrue(s.nAtoms() == 602)
         self.assertTrue(math.fabs(s2.radius(1) - 2.0) < 1e-5)
 
-        s2 = Structure("data/1ubq.pdb",Classifier("share/protor.config"))
+        s2 = Structure("lib/tests/data/1ubq.pdb",Classifier("lib/share/protor.config"))
         for i in range (0,601):
             self.assertTrue(math.fabs(s.radius(i)- s2.radius(i)) < 1e-5)
 
-        self.assertRaises(Exception,lambda: Structure("data/1ubq.pdb","data/err.config"))
+        self.assertRaises(Exception,lambda: Structure("lib/tests/data/1ubq.pdb","lib/tests/data/err.config"))
 
         s = Structure()
         s.addAtom(' CA ','ALA','   1','A',1,1,1)
@@ -135,7 +135,7 @@ class FreeSASATestCase(unittest.TestCase):
 
         s.setRadiiWithClassifier(DerivedClassifier())
         self.assertTrue(s.radius(0) == s.radius(1) == 10.0)
-        
+
         s.setRadii([1.0,3.0])
         self.assertTrue(s.radius(0) == 1.0)
         self.assertTrue(s.radius(1) == 3.0)
@@ -153,41 +153,41 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertRaises(AssertionError,lambda: s.chainLabel(2))
 
         setVerbosity(nowarnings)
-        s = Structure("data/1d3z.pdb",None,{'hydrogen' : True})
+        s = Structure("lib/tests/data/1d3z.pdb",None,{'hydrogen' : True})
         self.assertTrue(s.nAtoms() == 1231)
 
-        s = Structure("data/1d3z.pdb",None,{'hydrogen' : True, 'join-models' : True})
+        s = Structure("lib/tests/data/1d3z.pdb",None,{'hydrogen' : True, 'join-models' : True})
         self.assertTrue(s.nAtoms() == 12310)
 
-        s = Structure("data/1ubq.pdb",None,{'hetatm' : True})
+        s = Structure("lib/tests/data/1ubq.pdb",None,{'hetatm' : True})
         self.assertTrue(s.nAtoms() == 660)
 
-        s = Structure("data/1d3z.pdb",None,{'hydrogen' : True, 'skip-unknown' : True})
+        s = Structure("lib/tests/data/1d3z.pdb",None,{'hydrogen' : True, 'skip-unknown' : True})
         self.assertTrue(s.nAtoms() == 602)
-        
+
         setVerbosity(silent)
-        self.assertRaises(Exception, lambda : Structure("data/1d3z.pdb",None,{'hydrogen' : True, 'halt-at-unknown' : True}))
+        self.assertRaises(Exception, lambda : Structure("lib/tests/data/1d3z.pdb", None, {'hydrogen' : True, 'halt-at-unknown' : True}))
         setVerbosity(normal)
 
     def testStructureArray(self):
         # default separates chains, only uses first model (129 atoms per chain)
-        ss = structureArray("data/2jo4.pdb")
+        ss = structureArray("lib/tests/data/2jo4.pdb")
         self.assertTrue(len(ss) == 4)
         for s in ss:
             self.assertTrue(s.nAtoms() == 129)
 
         # include all models, separate chains, and include hydrogen and hetatm (286 atoms per chain)
         setVerbosity(nowarnings)
-        ss = structureArray("data/2jo4.pdb",{'separate-models' : True,
-                                             'hydrogen' : True,
-                                             'hetatm' : True,
-                                             'separate-chains' : True})
+        ss = structureArray("lib/tests/data/2jo4.pdb",{'separate-models' : True,
+                                                 'hydrogen' : True,
+                                                 'hetatm' : True,
+                                                 'separate-chains' : True})
         self.assertTrue(len(ss) == 4*10)
         for s in ss:
             self.assertTrue(s.nAtoms() == 286)
 
         # include all models, and include hydrogen and hetatm (286 atoms per chain)
-        ss = structureArray("data/2jo4.pdb",{'separate-models' : True,
+        ss = structureArray("lib/tests/data/2jo4.pdb",{'separate-models' : True,
                                              'hydrogen' : True,
                                              'hetatm' : True})
         self.assertTrue(len(ss) == 10)
@@ -196,7 +196,7 @@ class FreeSASATestCase(unittest.TestCase):
         setVerbosity(normal)
 
         # check that the structures initialized this way can be used for calculations
-        ss = structureArray("data/1ubq.pdb")
+        ss = structureArray("lib/tests/data/1ubq.pdb")
         self.assertTrue(len(ss) == 1)
         self.assertTrue(ss[0].nAtoms() == 602)
         result = calc(ss[0],Parameters({'algorithm' : ShrakeRupley}))
@@ -206,19 +206,19 @@ class FreeSASATestCase(unittest.TestCase):
         setVerbosity(silent)
         self.assertRaises(AssertionError,lambda: structureArray(None))
         self.assertRaises(IOError,lambda: structureArray(""))
-        self.assertRaises(Exception,lambda: structureArray("data/err.config"))
-        self.assertRaises(AssertionError,lambda: structureArray("data/2jo4.pdb",{'not-an-option' : True}))
+        self.assertRaises(Exception,lambda: structureArray("lib/tests/data/err.config"))
+        self.assertRaises(AssertionError,lambda: structureArray("lib/tests/data/2jo4.pdb",{'not-an-option' : True}))
         self.assertRaises(AssertionError,
-                          lambda: structureArray("data/2jo4.pdb",
+                          lambda: structureArray("lib/tests/data/2jo4.pdb",
                                                  {'not-an-option' : True, 'hydrogen' : True}))
         self.assertRaises(AssertionError,
-                          lambda: structureArray("data/2jo4.pdb",
+                          lambda: structureArray("lib/tests/data/2jo4.pdb",
                                                  {'hydrogen' : True}))
         setVerbosity(normal)
 
     def testCalc(self):
         # test default settings
-        structure = Structure("data/1ubq.pdb")
+        structure = Structure("lib/tests/data/1ubq.pdb")
         result = calc(structure,Parameters({'algorithm' : ShrakeRupley}))
         self.assertTrue(math.fabs(result.totalArea() - 4834.716265) < 1e-5)
         sasa_classes = classifyResults(result,structure)
@@ -235,11 +235,11 @@ class FreeSASATestCase(unittest.TestCase):
         # test extending Classifier with derived class
         sasa_classes = classifyResults(result,structure,DerivedClassifier())
         self.assertTrue(math.fabs(sasa_classes['bla'] - 4804.055641) < 1e-5)
-        
+
         ## test calculating with user-defined classifier ##
-        classifier = Classifier("share/oons.config")
+        classifier = Classifier("lib/share/oons.config")
         # classifier passed to assign user-defined radii, could also have used setRadiiWithClassifier()
-        structure = Structure("data/1ubq.pdb",classifier) 
+        structure = Structure("lib/tests/data/1ubq.pdb",classifier)
         result = calc(structure,Parameters({'algorithm' : ShrakeRupley}))
         self.assertTrue(math.fabs(result.totalArea() - 4779.5109924) < 1e-5)
         sasa_classes = classifyResults(result,structure,classifier) # classifier passed to get user-classes
@@ -253,6 +253,7 @@ class FreeSASATestCase(unittest.TestCase):
         parameters = Parameters()
         parameters.setNSlices(5000)
         parameters.setProbeRadius(0)
+        parameters.setNThreads(1)
         result = calcCoord(coord, radii, parameters)
         self.assertTrue(math.fabs(result.totalArea() - 4*math.pi) < 1e-3)
 
@@ -266,7 +267,7 @@ class FreeSASATestCase(unittest.TestCase):
                           lambda: calcCoord(radii, radii))
 
     def testSelectArea(self):
-        structure = Structure("data/1ubq.pdb")
+        structure = Structure("lib/tests/data/1ubq.pdb")
         result = calc(structure,Parameters({'algorithm' : ShrakeRupley}))
         # will only test that this gets through to the C interface,
         # extensive checking of the parser is done in the C unit tests
@@ -282,9 +283,9 @@ class FreeSASATestCase(unittest.TestCase):
             pass
         else:
             parser = PDBParser()
-            bp_structure = parser.get_structure("Ubiquitin","data/1ubq.pdb")
+            bp_structure = parser.get_structure("Ubiquitin","lib/tests/data/1ubq.pdb")
             s1 = structureFromBioPDB(bp_structure)
-            s2 = Structure("data/1ubq.pdb")
+            s2 = Structure("lib/tests/data/1ubq.pdb")
             self.assertTrue(s1.nAtoms() == s2.nAtoms())
 
             for i in range(0, s2.nAtoms()):
@@ -316,4 +317,3 @@ if __name__ == '__main__':
     dirname = os.path.dirname(abspath)
     os.chdir(dirname)
     unittest.main()
-

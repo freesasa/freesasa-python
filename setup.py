@@ -1,9 +1,22 @@
 from setuptools import setup, Extension
-from Cython.Build import cythonize, build_ext
+import os
+import sys
 from glob import glob
 
+USE_CYTHON = False
+
+try:
+    USE_CYTHON = os.environ['USE_CYTHON']
+except KeyError:
+    if not os.path.isfile("freesasa.c"):
+        sys.stderr.write("No C source detected, define environment variable USE_CYTHON to build from Cython source.\n")
+        sys.exit()
+    else:
+        print ("Define environment variable USE_CYTHON to build from Cython source")
+
+
 # not using wild cards because we're leaving out xml and json
-sources = list(map(lambda file: "./lib/src/" + file,
+sources = list(map(lambda file: os.path.join('lib', 'src', file),
               ["classifier.c",
                "classifier_protor.c", "classifier_oons.c", "classifier_naccess.c",
                "coord.c", "freesasa.c", "lexer.c", "log.c",
@@ -12,24 +25,27 @@ sources = list(map(lambda file: "./lib/src/" + file,
                "selection.c", "structure.c",
                "util.c"]))
 
-sources.append("./*.pyx")
 
-defines = [
-    "-DUSE_THREADS=1", "-DUSE_XML=0",
-    "-DUSE_JSON=0", "-DUSE_CHECK=0",
-    '-DPACKAGE="freesasa"',
-    '-DPACKAGE_NAME="FreeSASA"',
-    '-DPACKAGE_STRING="FreeSASA 2.0.2"',
-    '-DPACKAGE_VERSION="2.0.2"'
-]
+extensions = None
 
-extensions = [
+if USE_CYTHON:
+    sources.append("freesasa.pyx")
+else:
+    sources.append("freesasa.c")
+
+extension_src = [
     Extension("freesasa", sources,
-              glob("./src/*.h"),
               language='c',
-              extra_compile_args = defines
+              include_dirs=[os.path.join('lib', 'src'), '.'],
+              extra_compile_args = ['-DHAVE_CONFIG_H']
 	      )
 ]
+
+if USE_CYTHON:
+    from Cython.Build import cythonize, build_ext
+    extensions = cythonize(extension_src)
+else:
+    extensions = extension_src
 
 setup(
     name='freesasa',
@@ -38,13 +54,15 @@ setup(
     author='Simon Mitternacht',
     url='http://freesasa.github.io/',
     license='MIT',
-    ext_modules=cythonize(extensions),
+    ext_modules=extensions,
     keywords=['structural biology', 'proteins', 'bioinformatics'],
+    headers=glob(os.path.join('lib', 'src', '*')),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
     ],
-    setup_requires=['cython>=0.21']
+    setup_requires=['cython>=0.21'],
+    test_suite='test'
 )

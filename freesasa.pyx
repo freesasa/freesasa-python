@@ -48,27 +48,27 @@ debug = FREESASA_V_DEBUG
 
 ## The default values for calculation parameters
 defaultParameters = {
-     'algorithm'    : LeeRichards, 
+     'algorithm'    : LeeRichards,
      'probe-radius' : freesasa_default_parameters.probe_radius,
      'n-points'     : freesasa_default_parameters.shrake_rupley_n_points,
      'n-slices'     : freesasa_default_parameters.lee_richards_n_slices,
-     'n-threads'    : freesasa_default_parameters.n_threads 
+     'n-threads'    : freesasa_default_parameters.n_threads
 }
 
 ## Stores parameter values to be used by calculation.
-#   
+#
 #  Wraps the C struct freesasa_parameters.
 cdef class Parameters:
 
       cdef freesasa_parameters _c_param
       ## Initializes Parameters object.
-      #      
+      #
       #  @param param (dict) optional argument to specify parameter-values, modeled after
       #            ::defaultParameters
       #  @exception AssertionError invalid parameter values supplied
       #  @see defaultParameters
       def __init__(self,param=None):
-   
+
             self._c_param = freesasa_default_parameters
             if param != None:
                   if 'algorithm' in param:    self.setAlgorithm(param['algorithm'])
@@ -96,7 +96,7 @@ cdef class Parameters:
                   raise AssertionError("Algorithm '%s' is unknown" % alg)
 
       ## Get algorithm.
-      #     
+      #
       #  @return Name of algorithm
       def algorithm(self):
             if self._c_param.alg == FREESASA_SHRAKE_RUPLEY:
@@ -118,7 +118,7 @@ cdef class Parameters:
             return self._c_param.probe_radius
 
       ## Set number of test points in Shrake & Rupley algorithm.
-      #  @param n (int) Number of points (> 0). 
+      #  @param n (int) Number of points (> 0).
       #  @exception AssertionError n <= 0.
       def setNPoints(self,n):
             assert(n > 0)
@@ -141,7 +141,7 @@ cdef class Parameters:
       def nSlices(self):
             return self._c_param.lee_richards_n_slices
 
-      
+
       ## Set the number of threads to use in calculations.
       #  @param n (int) Number of points (> 0)
       #  @exception AssertionError n <= 0
@@ -149,7 +149,7 @@ cdef class Parameters:
             assert(n>0)
             self._c_param.n_threads = n
 
-            
+
       ## Get the number of threads to use in calculations.
       #  @return Number of threads.
       def nThreads(self):
@@ -162,7 +162,7 @@ cdef class Parameters:
 
 ## Stores results from SASA calculation.
 #  The type of object returned by calc(), not intended to be used
-#  outside of that context. 
+#  outside of that context.
 #
 #  Wraps the C struct freesasa_result.
 cdef class Result:
@@ -176,7 +176,7 @@ cdef class Result:
       def __dealloc__(self):
             if self._c_result is not NULL:
                   freesasa_result_free(self._c_result)
-            
+
       ## Number of atoms in the results
       #  @return Number of atoms
       def nAtoms(self):
@@ -184,7 +184,7 @@ cdef class Result:
                   return self._c_result.n_atoms
             return 0
 
-      
+
       ## Total SASA.
       # @return The total area in Å^2.
       # @exception AssertionError If no results have been associated
@@ -207,7 +207,7 @@ cdef class Result:
             cdef freesasa_result **p = <freesasa_result**> ptr2ptr
             p[0] = self._c_result
 
-      
+
 ## Assigns class and radius to atom by residue and atom name.
 #
 #  Subclasses derived from Classifier can be used to define custom
@@ -220,8 +220,8 @@ cdef class Result:
 #  Derived classifiers should set the member purePython to True
 #
 #  Residue names should be of the format `"ALA"`,`"ARG"`, etc.
-#      
-#  Atom names should be of the format `"CA"`, `"N"`, etc. 
+#
+#  Atom names should be of the format `"CA"`, `"N"`, etc.
 #
 cdef class Classifier:
       cdef freesasa_classifier* _c_classifier
@@ -229,19 +229,19 @@ cdef class Classifier:
 
       ## Constructor.
       #
-      #  If no file is provided the default classifier is used. 
+      #  If no file is provided the default classifier is used.
       #
       #  @see @ref Config-file.
-      #      
+      #
       #  @param fileName Name of file with classifier configuration.
       #  @exception IOError   Problem opening/reading file
-      #  @exception Exception Problem parsing provided configuration or 
+      #  @exception Exception Problem parsing provided configuration or
       #                       initializing defaults
       def __cinit__ (self,fileName=None):
             cdef FILE *config
             self._c_classifier = NULL
             if fileName is not None:
-                  config = fopen(fileName,'r')
+                  config = fopen(fileName,'rb')
                   if config is NULL:
                         raise IOError("File '%s' could not be opened." % fileName)
                   self._c_classifier = freesasa_classifier_from_file(config)
@@ -265,8 +265,8 @@ cdef class Classifier:
       ## Class of atom.
       #
       #  Depending on the configuration these classes can be
-      #  anything, but typically they will be 'Polar' and 'Apolar'. 
-      #  Unrecognized atoms will get the class 'Unknown'. 
+      #  anything, but typically they will be 'Polar' and 'Apolar'.
+      #  Unrecognized atoms will get the class 'Unknown'.
       #
       #  @param residueName (str) Residue name (`"ALA"`,`"ARG"`,...).
       #  @param atomName (str) Atom name (`"CA"`,`"C"`,...).
@@ -292,7 +292,7 @@ cdef class Classifier:
             p[0] = self._c_classifier
 
 ## Represents a protein structure, including its atomic radii.
-#      
+#
 #  Initialized from PDB-file. Calculates atomic radii using default
 #  classifier, or custom one provided as argument to initalizer
 #
@@ -316,7 +316,7 @@ cdef class Structure:
       #
       #  If PDB file is provided, the structure will be constructed
       #  based on the file. If not, this simply initializes an empty
-      #  structure and the other arguments are ignored. In this case 
+      #  structure and the other arguments are ignored. In this case
       #  atoms will have to be added manually using addAtom().
       #
       #  @param fileName (str) PDB file (if None empty structure generated).
@@ -324,7 +324,7 @@ cdef class Structure:
       #           radii, uses default if none provided
       #  @param options specify which atoms and models to include
       #  @exception IOError Problem opening/reading file.
-      #  @exception Exception Problem parsing PDB file or calculating 
+      #  @exception Exception Problem parsing PDB file or calculating
       #      atomic radii.
       #  @exception Exception If option 'halt-at-unknown' selected and
       #      unknown atom encountered.
@@ -342,7 +342,7 @@ cdef class Structure:
                   self._c_structure = freesasa_structure_new()
                   return
             cdef FILE *input
-            input = fopen(fileName,'r')
+            input = fopen(fileName,'rb')
             if input is NULL:
                   raise IOError("File '%s' could not be opened." % fileName)
             structure_options = Structure._get_structure_options(options)
@@ -378,15 +378,15 @@ cdef class Structure:
       # the atom won't be added if the default classifier doesn't
       # recognize the atom and also cannot deduce its element from the
       # atom name.
-      #      
+      #
       # @param atomName (str) atom name (e.g. `"CA"`)
       # @param residueName (str) residue name (e.g. `"ALA"`)
       # @param residueNumber (str or int) residue number (e.g. `'12'`)
-      #      or integer. Some PDBs have residue-numbers that aren't 
+      #      or integer. Some PDBs have residue-numbers that aren't
       #      regular numbers. Therefore treated as a string primarily.
       # @param chainLabel (str) 1-character string with chain label (e.g. 'A')
       # @param x,y,z (float) coordinates
-      # 
+      #
       # @exception Exception Residue-number invalid
       def addAtom(self, atomName, residueName, residueNumber, chainLabel, x, y, z):
             if (type(residueNumber) is str):
@@ -414,11 +414,11 @@ cdef class Structure:
             self.setRadii(r)
 
       ## Set atomic radii from an array
-      # @param radiusArray Array of atomic radii in Ångström, should 
+      # @param radiusArray Array of atomic radii in Ångström, should
       #                    have nAtoms() elements.
-      # @exception AssertionError if radiusArray has wrong dimension, structure 
+      # @exception AssertionError if radiusArray has wrong dimension, structure
       #                           not properly initialized, or if the array contains
-      #                           negative radii (not properly classified?) 
+      #                           negative radii (not properly classified?)
       def setRadii(self,radiusArray):
             assert(self._c_structure is not NULL)
             n = self.nAtoms()
@@ -440,7 +440,7 @@ cdef class Structure:
 
       ## Radius of atom.
       # @param i (int) Index of atom.
-      # @return Radius in Å. 
+      # @return Radius in Å.
       # @exception AssertionError if index out of bounds, object not properly initalized.
       def radius(self,i):
             assert(i >= 0 and i < self.nAtoms())
@@ -459,7 +459,7 @@ cdef class Structure:
             assert(atomIndex >= 0 and atomIndex < self.nAtoms())
             assert(radius >= 0)
             freesasa_structure_atom_set_radius(self._c_structure, atomIndex, radius)
-      
+
       ## Get atom name
       # @param i (int) Atom index.
       # @return Atom name as 4-character string.
@@ -468,7 +468,7 @@ cdef class Structure:
             assert(i >= 0 and i < self.nAtoms())
             assert(self._c_structure is not NULL)
             return freesasa_structure_atom_name(self._c_structure,i)
-      
+
       ## Get residue name of given atom.
       # @param i (int) Atom index.
       # @return Residue name as 3-character string.
@@ -495,7 +495,7 @@ cdef class Structure:
             assert(i >= 0 and i < self.nAtoms())
             assert(self._c_structure is not NULL)
             cdef char label[2]
-            label[0] = freesasa_structure_atom_chain(self._c_structure,i) 
+            label[0] = freesasa_structure_atom_chain(self._c_structure,i)
             label[1] = '\0'
             return label
 
@@ -512,7 +512,7 @@ cdef class Structure:
       @staticmethod
       def _get_structure_options(param):
             options = 0
-            
+
             # check validity of options
             knownOptions = {'hetatm','hydrogen','join-models','separate-models',
                             'separate-chains','skip-unknown','halt-at-unknown'}
@@ -556,7 +556,7 @@ cdef class Structure:
 ## Default options for structureArray.
 # Defined separately for Doxygen's sake.
 defaultStructureArrayOptions = {
-      'hetatm' : False, 
+      'hetatm' : False,
       'hydrogen' : False,
       'separate-chains' : True,
       'separate-models' : False
@@ -567,7 +567,7 @@ defaultStructureArrayOptions = {
 # Split PDB file into several structures by either by treating
 # chains separately, by treating each MODEL as a separate
 # structure, or both.
-# 
+#
 # @param fileName (str) The PDB file.
 # @param options (dict) Specification for how to read the PDB-file
 #  (see def value for options).
@@ -585,11 +585,11 @@ def structureArray(fileName,
                    classifier = None):
       assert fileName is not None
       # we need to have at least one of these
-      assert(('separate-chains' in options and options['separate-chains'] is True) 
+      assert(('separate-chains' in options and options['separate-chains'] is True)
              or ('separate-models' in options and options['separate-models'] is True))
       structure_options = Structure._get_structure_options(options)
       cdef FILE *input
-      input = fopen(fileName,'r')
+      input = fopen(fileName,'rb')
       if input is NULL:
             raise IOError("File '%s' could not be opened." % fileName)
       cdef int n
@@ -663,7 +663,7 @@ def calcCoord(coord, radii, parameters=None):
 # @param structure Structure used in calculation.
 # @param classifier Classifier (if not specified default is used).
 # @return Dictionary with names of classes as keys and their SASA values as values.
-# @exception Exception: Problems with classification, see C library error messages 
+# @exception Exception: Problems with classification, see C library error messages
 #  (or Python exceptions if run with derived classifier).
 def classifyResults(result,structure,classifier=None):
       if classifier is None:
@@ -678,11 +678,11 @@ def classifyResults(result,structure,classifier=None):
 
 ## Sum SASA result over a selection of atoms
 # @param commands A list of commands with selections using Pymol
-#   syntax, e.g. `"s1, resn ala+arg"` or `"s2, chain A and resi 1-5"` 
+#   syntax, e.g. `"s1, resn ala+arg"` or `"s2, chain A and resi 1-5"`
 #   (see @ref Selection).
-# @param structure A Structure.  
+# @param structure A Structure.
 # @param result Result from sasa calculation on structure.
-# @return Dictionary with names of selections (`"s1"`,`"s2"`,...) as 
+# @return Dictionary with names of selections (`"s1"`,`"s2"`,...) as
 #   keys, and the corresponding SASA values as values.
 # @exception Exception: Parser failed (typically syntax error), see
 #   library error messages.
@@ -759,9 +759,9 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
 
 ## Calc SASA from Bio.PDB structure
 #
-#  Usage 
+#  Usage
 #
-#      result, sasa_classes = calcBioPDB(structure, ...)  
+#      result, sasa_classes = calcBioPDB(structure, ...)
 #
 #  @remark Experimental, not thorougly tested yet
 #
@@ -776,11 +776,9 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
 #  @exception Exception if unknown atom is encountered and the option
 #             'halt-at-unknown' is active. Passes on exceptions from
 #             calc(), classifyResults() and structureFromBioPDB().
-def calcBioPDB(bioPDBStructure, parameters = Parameters(), 
+def calcBioPDB(bioPDBStructure, parameters = Parameters(),
                classifier = None, options = Structure.defaultOptions):
       structure = structureFromBioPDB(bioPDBStructure, classifier, options)
       result = calc(structure, parameters)
       sasa_classes = classifyResults(result, structure, classifier)
       return result, sasa_classes
-      
-
