@@ -5,6 +5,10 @@ environment:
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:O N /C .\\appveyor\\run_with_env.cmd"
     USE_CYTHON: 1
+    TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+    TWINE_USERNAME: mittinatten
+    TWINE_PASSWORD:
+        secure: PE3DJXf2VYmUlH1Vo6CoMA==
 
   matrix:
 
@@ -81,7 +85,7 @@ install:
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "%CMD_IN_ENV% pip install wheel cython biopython"
+  - "%CMD_IN_ENV% pip install wheel cython biopython twine"
 
   - git submodule update --init
 
@@ -96,14 +100,11 @@ test_script:
 after_test:
   # If tests are successful, create binary packages for the project.
   - "%CMD_IN_ENV% python setup.py bdist_wheel"
-  - "%CMD_IN_ENV% python setup.py bdist_wininst"
-  - "%CMD_IN_ENV% python setup.py bdist_msi"
   - ps: "ls dist"
 
 artifacts:
-  # Archive the generated packages in the ci.appveyor.com build report.
   - path: dist\*
+    name: pypiartifacts
 
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
-#
+deploy_script:
+  - if "%APPVEYOR_REPO_TAG%"=="true" ( twine upload dist\* --skip-existing ) else ( echo "Will only deploy tagged commits" )

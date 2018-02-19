@@ -50,7 +50,7 @@ else:
 setup(
     name='freesasa',
     description='Calculate solvent accessible surface areas of proteins',
-    version= '2.0.2',
+    version= '2.0.2b1',
     author='Simon Mitternacht',
     url='http://freesasa.github.io/',
     license='MIT',
@@ -61,7 +61,9 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     setup_requires=['cython>=0.21'],
     test_suite='test'
