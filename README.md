@@ -1,5 +1,6 @@
 FreeSASA Python module
 ======================
+[![Build status](https://ci.appveyor.com/api/projects/status/nyo51pv2ufj2yhcj?svg=true)](https://ci.appveyor.com/project/mittinatten/freesasa-python)
 
 The PyPi module has FreeSASA as a submodule, and uses a separate
 setup.py and config.h to avoid dependence on autotools.
