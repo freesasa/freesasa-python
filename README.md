@@ -1,10 +1,17 @@
 FreeSASA Python module
 ======================
-[![Build status](https://ci.appveyor.com/api/projects/status/nyo51pv2ufj2yhcj?svg=true)](https://ci.appveyor.com/project/mittinatten/freesasa-python)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/nyo51pv2ufj2yhcj/branch/master?svg=true)](https://ci.appveyor.com/project/mittinatten/freesasa-python/branch/master)
+[![Travis build status](https://travis-ci.org/freesasa/freesasa-python.svg?branch=master)](https://travis-ci.org/freesasa/freesasa-python.svg?branch=master)
 
-The module has the FreeSASA C source as a submodule. It works with Python 2.7 and 3.4+, on Linux, Mac OS X and Windows.
+The module has the [FreeSASA C Library](https://github.com/mittinatten/freesasa>) as a submodule.
+It works with Python 2.7 and 3.4+, on Linux, Mac OS X and Windows.
 
-After cloning, build the module by the following
+It can be installed using
+~~~~sh
+pip install freesasa
+~~~~
+
+Developers can clone the library, and then build the module by the following
 ~~~~sh
 git submodule update --init
 python setup.py build

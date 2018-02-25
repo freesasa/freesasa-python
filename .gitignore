@@ -3,5 +3,6 @@ dist
 freesasa.egg-info
 *~
 freesasa.c
-freesasa.so
+*.so
+__pycache__
 test.pyc

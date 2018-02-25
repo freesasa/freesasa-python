@@ -33,11 +33,16 @@ if USE_CYTHON:
 else:
     sources.append("freesasa.c")
 
+compile_args=['-DHAVE_CONFIG_H']
+
+if os.name == 'posix':
+    compile_args.append('-std=gnu99')
+
 extension_src = [
     Extension("freesasa", sources,
               language='c',
               include_dirs=[os.path.join('lib', 'src'), '.'],
-              extra_compile_args = ['-DHAVE_CONFIG_H']
+              extra_compile_args = compile_args
 	      )
 ]
 
@@ -58,7 +63,9 @@ setup(
     keywords=['structural biology', 'proteins', 'bioinformatics'],
     headers=glob(os.path.join('lib', 'src', '*')),
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Chemistry',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
