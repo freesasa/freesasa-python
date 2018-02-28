@@ -15,7 +15,7 @@ class DerivedClassifier(Classifier):
 
 class FreeSASATestCase(unittest.TestCase):
     def testParameters(self):
-        d = defaultParameters
+        d = Parameters.defaultParameters
         p = Parameters()
         self.assertTrue(p.algorithm() == LeeRichards)
         self.assertTrue(p.algorithm() == d['algorithm'])

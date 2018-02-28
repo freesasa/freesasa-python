@@ -6,3 +6,4 @@ freesasa.c
 *.so
 __pycache__
 test.pyc
+docs/build

@@ -52,10 +52,14 @@ if USE_CYTHON:
 else:
     extensions = extension_src
 
+with open(os.path.join('docs','source','intro.rst')) as file:
+    long_description = file.read();
+
 setup(
     name='freesasa',
-    description='Calculate solvent accessible surface areas of proteins',
     version= '2.0.2b2',
+    description='Calculate solvent accessible surface areas of proteins',
+    long_description=long_description,
     author='Simon Mitternacht',
     url='http://freesasa.github.io/',
     license='MIT',
