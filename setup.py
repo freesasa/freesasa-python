@@ -55,7 +55,7 @@ else:
 setup(
     name='freesasa',
     description='Calculate solvent accessible surface areas of proteins',
-    version= '2.0.2b1',
+    version= '2.0.2b2',
     author='Simon Mitternacht',
     url='http://freesasa.github.io/',
     license='MIT',
