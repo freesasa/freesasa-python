@@ -52,11 +52,13 @@ if USE_CYTHON:
 else:
     extensions = extension_src
 
-long_description = "This module provides bindings for the FreeSASA C library."
+long_description = \
+ "This module provides bindings for the FreeSASA C library. " + \
+ "See http://freesasa.github.io/python/ for documentation."
 
 setup(
     name='freesasa',
-    version= '2.0.3',
+    version= '2.0.3.post3',
     description='Calculate solvent accessible surface areas of proteins',
     long_description=long_description,
     author='Simon Mitternacht',
