@@ -4,13 +4,12 @@ FreeSASA Python module
 [![Travis build status](https://travis-ci.org/freesasa/freesasa-python.svg?branch=master)](https://travis-ci.org/freesasa/freesasa-python)
 
 The module provides Python bindings for the [FreeSASA C Library](https://github.com/mittinatten/freesasa).
-It works with Python 2.7 and 3.4+, on Linux, Mac OS X and Windows. Still in pre-release until the documentation is ready, for now see http://freesasa.github.io/doxygen/Python.html.
+It works with Python 2.7 and 3.4+, on Linux, Mac OS X and Windows. Documentation can be found at http://freesasa.github.io/python/.
 
-It can be installed using
+Install the module by
 ~~~~sh
 pip install freesasa
 ~~~~
-Adding the flag `--pre` is necessary on some platforms to install it before the stable release is available.
 
 Developers can clone the library, and then build the module by the following
 ~~~~sh
