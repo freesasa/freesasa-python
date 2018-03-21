@@ -284,7 +284,14 @@ cdef class Classifier:
     Residue names should be of the format ``"ALA"``, ``"ARG"``, etc.
     Atom names should be of the format ``"CA"``, ``"N"``, etc.
     """
-    cdef freesasa_classifier* _c_classifier
+    # this reference is used for classification
+    cdef const freesasa_classifier *_c_classifier
+
+    # if the classifier is read from a file we store it here,
+    # with a reference in _c_classifier (for the sake of const-correctness)
+    cdef freesasa_classifier *_dynamic_c_classifier
+
+    # to be used by derived classes
     purePython = False
 
     def __init__ (self, fileName=None):
@@ -301,23 +308,52 @@ cdef class Classifier:
                        initializing defaults
         """
         cdef FILE *config
+
         self._c_classifier = NULL
+        self._dynamic_c_classifier = NULL
+
         if fileName is not None:
             config = fopen(fileName, 'rb')
             if config is NULL:
                 raise IOError("File '%s' could not be opened." % fileName)
-            self._c_classifier = freesasa_classifier_from_file(config)
+            self._dynamic_c_classifier = freesasa_classifier_from_file(config)
             fclose(config)
+            self._c_classifier = self._dynamic_c_classifier;
             if self._c_classifier is NULL:
                 raise Exception("Error parsing configuration in '%s'." % fileName)
+
         else:
             self._c_classifier = &freesasa_default_classifier
 
     # The destructor
     def __dealloc__(self):
-        if self._c_classifier is not &freesasa_default_classifier:
-            freesasa_classifier_free(self._c_classifier)
+        if (self._isCClassifier()):
+            freesasa_classifier_free(self._dynamic_c_classifier)
 
+    @staticmethod
+    def getStandardClassifier(type):
+        """
+        Get a standard classifier (ProtOr, OONS or NACCESS)
+
+        Args:
+            type (str): The type, can have values ``'protor'``, ``'oons'`` or ``'naccess'``
+
+        Returns:
+            :py:class:`.Classifier`: The requested classifier
+
+        Raises:
+            Exception: If type not recognized
+        """
+        classifier = Classifier()
+        if type == 'naccess':
+            classifier._c_classifier = &freesasa_naccess_classifier
+        elif type == 'oons':
+            classifier._c_classifier = &freesasa_oons_classifier
+        elif type == 'protor':
+            classifier._c_classifier = &freesasa_protor_classifier
+        else:
+            raise Exception("Uknown classifier '%s'" % type)
+        return classifier
 
     # This is used internally to determine if a Classifier wraps a C
     # classifier or not (necessary when generating structures)
@@ -325,7 +361,7 @@ cdef class Classifier:
     def _isCClassifier(self):
         return not self.purePython
 
-    def classify(self,residueName, atomName):
+    def classify(self, residueName, atomName):
         """Class of atom.
 
         Depending on the configuration these classes can be
@@ -358,9 +394,10 @@ cdef class Classifier:
         """
         return freesasa_classifier_radius(self._c_classifier, residueName, atomName)
 
+    # the address obtained is a pointer to const
     def _get_address(self, size_t ptr2ptr):
         cdef freesasa_classifier **p = <freesasa_classifier**> ptr2ptr
-        p[0] = self._c_classifier
+        p[0] = <freesasa_classifier*>self._c_classifier # const cast
 
 cdef class Structure:
     """

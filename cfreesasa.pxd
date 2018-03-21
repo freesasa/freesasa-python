@@ -57,6 +57,9 @@ cdef extern from "freesasa.h":
     cdef extern const freesasa_parameters freesasa_default_parameters
     cdef extern const freesasa_classifier freesasa_default_classifier
     cdef extern const freesasa_classifier freesasa_residue_classifier
+    cdef extern const freesasa_classifier freesasa_naccess_classifier
+    cdef extern const freesasa_classifier freesasa_protor_classifier
+    cdef extern const freesasa_classifier freesasa_oons_classifier
 
     freesasa_result* freesasa_calc_structure(const freesasa_structure *structure,
                                              const freesasa_parameters *parameters)
@@ -137,7 +140,7 @@ cdef extern from "freesasa.h":
     void freesasa_structure_set_radius(freesasa_structure *structure,
                                        const double *radii)
 
-    
+
     int freesasa_structure_add_atom(freesasa_structure *structure,
                                     const char* atom_name,
                                     const char* residue_name,
