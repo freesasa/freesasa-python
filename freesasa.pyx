@@ -662,13 +662,15 @@ cdef class Structure:
 
     def residueNumber(self,i):
         """
-        Get residue number for given atom
+        Get residue number for given atom.
+
+        Residue number will include the insertion code if there is one.
 
         Args:
             i (int): Atom index.
 
         Returns:
-            str: Residue number as 4-character string
+            str: Residue number as 5-character string (last character is either whitespace or insertion code)
 
         Raises:
             AssertionError: if index out of range or Structure not properly initialized
@@ -965,7 +967,9 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
     """
     Create a freesasa structure from a Bio.PDB structure
 
-    Experimental, not thorougly tested yet
+    Experimental, not thorougly tested yet.
+    Structures generated this way will not preserve whitespace in residue numbers, etc,
+    as in :py:class:`.Structure`.
 
     Args:
         bioPDBStructure: a `Bio.PDB` structure
@@ -991,14 +995,17 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
     for a in atoms:
         r = a.get_parent()
         hetflag, resseq, icode = r.get_id()
+        resname = r.get_resname()
 
         if (hetflag is not ' ' and not (optbitfield & FREESASA_INCLUDE_HETATM)):
             continue
 
         c = r.get_parent()
         v = a.get_vector()
+        if (icode):
+            resseq = str(resseq) + str(icode)
 
-        if (classifier.classify(r.get_resname(), a.get_fullname()) is 'Unknown'):
+        if (classifier.classify(resname, a.get_fullname()) is 'Unknown'):
             if (optbitfield & FREESASA_SKIP_UNKNOWN):
                 continue
             if (optbitfield & FREESASA_HALT_AT_UNKNOWN):

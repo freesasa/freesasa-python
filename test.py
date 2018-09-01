@@ -282,32 +282,39 @@ class FreeSASATestCase(unittest.TestCase):
             print("Can't import Bio.PDB, tests skipped")
             pass
         else:
-            parser = PDBParser()
-            bp_structure = parser.get_structure("Ubiquitin","lib/tests/data/1ubq.pdb")
+            parser = PDBParser(QUIET=True)
+            bp_structure = parser.get_structure("Ubiquitin","lib/tests/data/1a0q.pdb")
             s1 = structureFromBioPDB(bp_structure)
-            s2 = Structure("lib/tests/data/1ubq.pdb")
+            s2 = Structure("lib/tests/data/1a0q.pdb")
             self.assertTrue(s1.nAtoms() == s2.nAtoms())
+
+            # make sure we got the insertion code
+            self.assertEqual(s1.residueNumber(2286), '82A')
 
             for i in range(0, s2.nAtoms()):
                 self.assertTrue(s1.radius(i) == s2.radius(i))
+
                 # there can be tiny errors here
                 self.assertTrue(math.fabs(s1.coord(i)[0] - s2.coord(i)[0]) < 1e-5)
                 self.assertTrue(math.fabs(s1.coord(i)[1] - s2.coord(i)[1]) < 1e-5)
                 self.assertTrue(math.fabs(s1.coord(i)[2] - s2.coord(i)[2]) < 1e-5)
 
+                # whitespace won't match
+                self.assertIn(s1.residueNumber(i), s2.residueNumber(i))
+
             # because Bio.PDB structures will have slightly different
             # coordinates (due to rounding errors) we set the
             # tolerance as high as 1e-3
             result = calc(s1, Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
-            self.assertTrue(math.fabs(result.totalArea() - 4804.055641) < 1e-3)
+            self.assertTrue(math.fabs(result.totalArea() - 18923.280586) < 1e-3)
             sasa_classes = classifyResults(result, s1)
-            self.assertTrue(math.fabs(sasa_classes['Polar'] - 2504.217302) < 1e-3)
-            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2299.838339) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Polar'] - 9143.066411) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9780.2141746) < 1e-3)
 
             result, sasa_classes = calcBioPDB(bp_structure, Parameters({'algorithm' : ShrakeRupley}))
-            self.assertTrue(math.fabs(result.totalArea() - 4834.716265) < 1e-3)
-            self.assertTrue(math.fabs(sasa_classes['Polar'] - 2515.821238) < 1e-3)
-            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2318.895027) < 1e-3)
+            self.assertTrue(math.fabs(result.totalArea() - 18908.900192) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Polar'] - 9120.7423269) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9788.157865) < 1e-3)
 
 
 if __name__ == '__main__':
