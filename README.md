@@ -14,7 +14,7 @@ pip install freesasa
 Developers can clone the library, and then build the module by the following
 ~~~~sh
 git submodule update --init
-python setup.py build
+USE_CYTHON=1 python setup.py build
 ~~~~
 
 Tests can be run using
