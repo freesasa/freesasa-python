@@ -68,7 +68,7 @@ setup(
     keywords=['structural biology', 'proteins', 'bioinformatics'],
     headers=glob(os.path.join('lib', 'src', '*')),
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Chemistry',
         'License :: OSI Approved :: MIT License',
