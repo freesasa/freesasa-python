@@ -9,7 +9,8 @@ cache:
     - "$HOME/.cache/pip"
     - "$HOME/.pyenv_cache"
 
-include:
+matrix:
+    include:
     - os: linux
       dist: xenial
     - os: osx
