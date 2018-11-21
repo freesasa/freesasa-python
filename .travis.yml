@@ -8,9 +8,11 @@ cache:
     directories:
     - "$HOME/.cache/pip"
     - "$HOME/.pyenv_cache"
-os:
-    - linux
-    - osx
+
+include:
+    - os: linux
+      dist: xenial
+    - os: osx
 env:
     matrix:
     - PYVER=2.7
