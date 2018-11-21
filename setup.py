@@ -58,7 +58,7 @@ long_description = \
 
 setup(
     name='freesasa',
-    version= '2.0.3.post3',
+    version= '2.0.3.post4',
     description='Calculate solvent accessible surface areas of proteins',
     long_description=long_description,
     author='Simon Mitternacht',
@@ -76,6 +76,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',	    
     ],
     setup_requires=['cython>=0.21'],
     test_suite='test'
