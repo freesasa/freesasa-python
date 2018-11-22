@@ -92,7 +92,7 @@ classes nitrogens separately, and assigns radii based on element only
     import freesasa
     import re
 
-    class DerivedClassifier(Classifier):
+    class DerivedClassifier(freesasa.Classifier):
         # this must be set explicitly in all derived classifiers
         purePython = True
 
@@ -110,7 +110,7 @@ classes nitrogens separately, and assigns radii based on element only
                 return 1.4
             if re.match('\s*S',atomName): # Sulfur
                 return 1.8
-        return 0;                     # everything else (Hydrogen, etc)
+            return 0;                     # everything else (Hydrogen, etc)
 
     classifier = DerivedClassifier()
 
