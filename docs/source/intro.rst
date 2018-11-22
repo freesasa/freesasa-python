@@ -93,6 +93,9 @@ classes nitrogens separately, and assigns radii based on element only
     import re
 
     class DerivedClassifier(Classifier):
+        # this must be set explicitly in all derived classifiers
+        purePython = True
+
         def classify(self, residueName, atomName):
             if re.match('\s*N', atomName):
                 return 'Nitrogen'
