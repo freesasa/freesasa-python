@@ -76,8 +76,8 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',	    
+        'Programming Language :: Python :: 3.7',
     ],
-    setup_requires=['cython>=0.21'],
+    setup_requires=['cython>=0.29.13'],
     test_suite='test'
 )
