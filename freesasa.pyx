@@ -574,7 +574,7 @@ cdef class Structure:
         assert(r is not NULL)
         for i in range(0,n):
             r[i] = radiusArray[i]
-            assert(r[i] >= 0)
+            assert(r[i] >= 0), "Error: Radius array is <= 0 for the residue: " + self.residueName(i) + " ,atom: " + self.atomName(i)
         freesasa_structure_set_radius(self._c_structure, r)
 
     def nAtoms(self):
