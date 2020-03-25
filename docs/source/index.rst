@@ -9,7 +9,7 @@ FreeSASA Python Module
 ======================
 
 The module provides Python bindings for the `FreeSASA C Library <https://github.com/mittinatten/freesasa>`_.
-It works with Python 2.7 and 3.4+, on Linux, Mac OS X and Windows. The source is available as a PyPi source
+It works with Python 2.7 and 3.5+, on Linux, Mac OS X and Windows. The source is available as a PyPi source
 distribution and on `GitHub <https://github.com/freesasa/freesasa-python>`_.
 
 Install the FreeSASA Python Module by
