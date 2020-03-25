@@ -25,7 +25,7 @@ author = 'Simon Mitternacht'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '2.0.3'
+release = '2.0.4'
 
 
 # -- General configuration ---------------------------------------------------
