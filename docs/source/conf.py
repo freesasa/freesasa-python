@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'FreeSASA Python Module'
-copyright = '2018, Simon Mitternacht'
+copyright = '2020, Simon Mitternacht'
 author = 'Simon Mitternacht'
 
 # The short X.Y version
