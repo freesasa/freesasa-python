@@ -802,8 +802,13 @@ def structureArray(fileName,
     if input is NULL:
         raise IOError("File '%s' could not be opened." % fileName)
     cdef int n
+
+    verbosity = getVerbosity()
+    setVerbosity(silent)
     cdef freesasa_structure** sArray = freesasa_structure_array(input,&n,NULL,structure_options)
     fclose(input)
+    setVerbosity(verbosity)
+
     if sArray is NULL:
         raise Exception("Problems reading structures in '%s'." % fileName)
     structures = []
