@@ -1,2 +1,1 @@
 include LICENSE.txt config.h
-include lib/src/*.h lib/src/*.c
