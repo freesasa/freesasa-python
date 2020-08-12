@@ -204,6 +204,29 @@ cdef class Parameters:
         cdef freesasa_parameters **p = <freesasa_parameters**> ptr2ptr
         p[0] = &self._c_param
 
+class ResidueArea:
+    ## Total area
+    total = 0
+    ## Polar area
+    polar = 0
+    ## Apolar area
+    apolar = 0
+    ## Main chain area
+    mainChain = 0
+    ## Side chain area
+    sideChain = 0
+
+    ## Relative total area
+    relativeTotal = 0
+    ## Relative polar area
+    relativePolar = 0
+    ## Relative apolar area
+    relativeApolar = 0
+    ## Relative main chain area
+    relativeMainChain = 0
+    ## Relative side chain area
+    relativeSideChain = 0
+        
 cdef class Result:
     """
     Stores results from SASA calculation.
@@ -212,15 +235,21 @@ cdef class Result:
     not intended to be used outside of that context.
     """
     cdef freesasa_result* _c_result
+    cdef freesasa_node* _c_root_node
+    cdef freesasa_structure* _c_structure
 
     ## The constructor
     def __init__ (self):
         self._c_result = NULL
+        self._c_root_node = NULL
+        self._c_structure = NULL
 
     ## The destructor
     def __dealloc__(self):
         if self._c_result is not NULL:
             freesasa_result_free(self._c_result)
+        if self._c_root_node is not NULL:
+            freesasa_node_free(self._c_root_node)
 
     def nAtoms(self):
         """
@@ -264,6 +293,57 @@ cdef class Result:
         assert(i < self._c_result.n_atoms)
         return self._c_result.sasa[i]
 
+    def residueAreas(self):
+        assert(self._c_result is not NULL)
+        assert(self._c_structure is not NULL)
+        
+        if (self._c_root_node == NULL):
+            self._c_root_node = <freesasa_node*> freesasa_tree_init(self._c_result,
+                                                                    self._c_structure,
+                                                                    "Structure")
+        cdef freesasa_node* result_node = <freesasa_node*> freesasa_node_children(self._c_root_node)
+        cdef freesasa_node* structure = <freesasa_node*> freesasa_node_children(result_node)
+        cdef freesasa_node* chain
+        cdef freesasa_node* residue
+        cdef freesasa_nodearea* c_area
+        cdef freesasa_nodearea* c_ref_area
+        
+        result = {}
+
+        chain = <freesasa_node*> freesasa_node_children(structure)
+        while (chain != NULL):
+            residue  = <freesasa_node*> freesasa_node_children(chain)
+            chainLabel = freesasa_node_name(chain)
+            result[chainLabel] = {}
+
+            while (residue != NULL):
+                c_area = <freesasa_nodearea*> freesasa_node_area(residue)
+                c_ref_area = <freesasa_nodearea*> freesasa_node_residue_reference(residue)
+                residueNumber = freesasa_node_residue_number(residue)
+                area = ResidueArea()
+                area.total = c_area.total
+                area.mainChain = c_area.main_chain
+                area.sideChain = c_area.side_chain
+                area.polar = c_area.polar
+                area.apolar = c_area.apolar
+                area.relativeTotal = self._safe_div(c_area.total, c_ref_area.total)
+                area.relativeMainChain = self._safe_div(c_area.main_chain, c_ref_area.main_chain)
+                area.relativeSideChain = self._safe_div(c_area.side_chain, c_ref_area.side_chain)
+                area.relativePolar = self._safe_div(c_area.polar, c_ref_area.polar)
+                area.relativeApolar = self._safe_div(c_area.apolar, c_ref_area.apolar)
+                result[chainLabel][residueNumber.strip()] = area
+                residue = <freesasa_node*> freesasa_node_next(residue)
+
+            chain = <freesasa_node*> freesasa_node_next(chain)
+
+        return result
+
+    def _safe_div(self,a,b):
+        try:
+            return a/b
+        except ZeroDivisionError:
+            return float('nan')
+    
     def _get_address(self, size_t ptr2ptr):
         cdef freesasa_result **p = <freesasa_result**> ptr2ptr
         p[0] = self._c_result
@@ -845,8 +925,11 @@ def calc(structure,parameters=None):
     structure._get_address(<size_t>&s)
     result = Result()
     result._c_result = <freesasa_result*> freesasa_calc_structure(s,p)
+    result._c_structure = <freesasa_structure*> s
+
     if result._c_result is NULL:
         raise Exception("Error calculating SASA.")
+
     return result
 
 def calcCoord(coord, radii, parameters=None):

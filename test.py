@@ -225,6 +225,20 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertTrue(math.fabs(sasa_classes['Polar'] - 2515.821238) < 1e-5)
         self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2318.895027) < 1e-5)
 
+        # test residue areas
+        residueAreas = result.residueAreas()
+        a76 = residueAreas['A']['76']
+        self.assertTrue(math.fabs(a76.total - 142.1967898) < 1e-5)
+        self.assertTrue(math.fabs(a76.mainChain - 142.1967898) < 1e-5)
+        self.assertTrue(math.fabs(a76.sideChain - 0) < 1e-5)
+        self.assertTrue(math.fabs(a76.polar - 97.297889) < 1e-5)
+        self.assertTrue(math.fabs(a76.apolar - 44.898900) < 1e-5)
+        self.assertTrue(math.fabs(a76.relativeTotal - 1.75357) < 1e-4)
+        self.assertTrue(math.fabs(a76.relativeMainChain - 1.75357) < 1e-4)        
+        self.assertTrue(math.isnan(a76.relativeSideChain))
+        self.assertTrue(math.fabs(a76.relativePolar - 2.17912) < 1e-4)
+        self.assertTrue(math.fabs(a76.relativeApolar - 1.23213) < 1e-4)
+        
         # test L&R
         result = calc(structure,Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
         sasa_classes = classifyResults(result,structure)
@@ -245,6 +259,7 @@ class FreeSASATestCase(unittest.TestCase):
         sasa_classes = classifyResults(result,structure,classifier) # classifier passed to get user-classes
         self.assertTrue(math.fabs(sasa_classes['Polar'] - 2236.9298941) < 1e-5)
         self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2542.5810983) < 1e-5)
+
 
     def testCalcCoord(self):
         # one unit sphere
