@@ -228,6 +228,9 @@ class FreeSASATestCase(unittest.TestCase):
         # test residue areas
         residueAreas = result.residueAreas()
         a76 = residueAreas['A']['76']
+        self.assertEqual(a76.residueType, "GLY")
+        self.assertEqual(a76.residueNumber, "76")
+        self.assertTrue(a76.hasRelativeAreas)
         self.assertTrue(math.fabs(a76.total - 142.1967898) < 1e-5)
         self.assertTrue(math.fabs(a76.mainChain - 142.1967898) < 1e-5)
         self.assertTrue(math.fabs(a76.sideChain - 0) < 1e-5)
