@@ -387,7 +387,7 @@ cdef class Result:
                     area.relativePolar = self._safe_div(c_area.polar, c_ref_area.polar)
                     area.relativeApolar = self._safe_div(c_area.apolar, c_ref_area.apolar)
 
-                result[chainLabel][residueNumber.strip()] = area
+                result[chainLabel][residueNumber] = area
 
                 residue = <freesasa_node*> freesasa_node_next(residue)
 
@@ -1178,7 +1178,7 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
 
     Usage::
 
-        result, sasa_classes = calcBioPDB(structure, ...)
+        result, sasa_classes, residue_areas = calcBioPDB(structure, ...)
 
     Experimental, not thorougly tested yet
 
@@ -1190,8 +1190,9 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
             (uses :py:attr:`.Structure.defaultOptions` if none specified
 
     Returns:
-        A :py:class:`.Result` object and a dictionary with classes
-        defined by the classifier and associated areas
+        A :py:class:`.Result` object, a dictionary with classes
+        defined by the classifier and associated areas,
+        and a dictionary of the type returned by :py:meth:`.Result.residueAreas`.
 
     Raises:
         Exception: if unknown atom is encountered and the option
@@ -1201,5 +1202,13 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
     """
     structure = structureFromBioPDB(bioPDBStructure, classifier, options)
     result = calc(structure, parameters)
+
+    # Hack!:
+    # This calculation depends on the structure not having been deallocated,
+    # calling it later will cause seg-faults. By calling it now the result
+    # is stored.
+    # TODO: See if there is a refactoring that solves this in a more elegant way
+    residue_areas = result.residueAreas()
+
     sasa_classes = classifyResults(result, structure, classifier)
-    return result, sasa_classes
+    return result, sasa_classes, residue_areas
