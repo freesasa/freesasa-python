@@ -50,7 +50,7 @@ after_success:
             if [ "x$TRAVIS_OS_NAME" == "xosx" ]; then
                 python setup.py bdist_wheel;
                 # only submit sdist once
-                if [ "x$PYENV" == "x2.7" ]; then
+                if [ "x$PYVER" == "x3.8" ]; then
                     python setup.py sdist
                 fi
             fi
