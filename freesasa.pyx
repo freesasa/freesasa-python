@@ -265,13 +265,11 @@ cdef class Result:
 
     cdef freesasa_result* _c_result
     cdef freesasa_node* _c_root_node
-    cdef freesasa_structure* _c_structure
 
     ## The constructor
     def __init__ (self):
         self._c_result = NULL
         self._c_root_node = NULL
-        self._c_structure = NULL
 
     ## The destructor
     def __dealloc__(self):
@@ -341,12 +339,8 @@ cdef class Result:
                  with the object.
         """
         assert(self._c_result is not NULL)
-        assert(self._c_structure is not NULL)
+        assert(self._c_root_node is not NULL, "Result.residueAreas can only be called on results generated directly or indirectly by freesasa.calc()")
 
-        if (self._c_root_node == NULL):
-            self._c_root_node = <freesasa_node*> freesasa_tree_init(self._c_result,
-                                                                    self._c_structure,
-                                                                    "Structure")
         cdef freesasa_node* result_node = <freesasa_node*> freesasa_node_children(self._c_root_node)
         cdef freesasa_node* structure = <freesasa_node*> freesasa_node_children(result_node)
         cdef freesasa_node* chain
@@ -987,8 +981,8 @@ def calc(structure,parameters=None):
     structure._get_address(<size_t>&s)
     result = Result()
     result._c_result = <freesasa_result*> freesasa_calc_structure(s,p)
-    result._c_structure = <freesasa_structure*> s
-
+    result._c_root_node = <freesasa_node*> freesasa_tree_init(result._c_result,
+                                                              s, "Structure")
     if result._c_result is NULL:
         raise Exception("Error calculating SASA.")
 
@@ -1208,7 +1202,7 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
     # calling it later will cause seg-faults. By calling it now the result
     # is stored.
     # TODO: See if there is a refactoring that solves this in a more elegant way
-    residue_areas = result.residueAreas()
+    # residue_areas = result.residueAreas()
 
     sasa_classes = classifyResults(result, structure, classifier)
-    return result, sasa_classes, residue_areas
+    return result, sasa_classes #, residue_areas

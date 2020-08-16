@@ -333,10 +333,11 @@ class FreeSASATestCase(unittest.TestCase):
             self.assertTrue(math.fabs(residue_areas['L']['2'].total - 43.714) < 1e-2)
 
             faulthandler.enable()
-            result, sasa_classes, residue_areas = calcBioPDB(bp_structure, Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
+            result, sasa_classes = calcBioPDB(bp_structure, Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
             self.assertTrue(math.fabs(result.totalArea() - 18923.280586) < 1e-3)
             self.assertTrue(math.fabs(sasa_classes['Polar'] - 9143.066411) < 1e-3)
             self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9780.2141746) < 1e-3)
+            residue_areas = result.residueAreas()
             self.assertTrue(math.fabs(residue_areas['L']['2'].total - 43.714) < 1e-2)
 
 
