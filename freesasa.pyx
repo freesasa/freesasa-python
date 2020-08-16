@@ -39,14 +39,26 @@ debug = FREESASA_V_DEBUG
 
 
 cdef class Parameters:
-    """Stores parameter values to be used by calculation."""
+    """
+    Stores parameter values to be used by calculation.
+
+    Default parameters are
+    ::
+        defaultParameters = {
+            'algorithm'    : LeeRichards,
+            'probe-radius' : freesasa_default_parameters.probe_radius,
+            'n-points'     : freesasa_default_parameters.shrake_rupley_n_points,
+            'n-slices'     : freesasa_default_parameters.lee_richards_n_slices,
+            'n-threads'    : freesasa_default_parameters.n_threads
+        }
+
+    Attributes:
+        defaultParamers (dict): The default parameters
+    """
+
+
     cdef freesasa_parameters _c_param
 
-    """
-    The default parameter values.
-
-    Taken from the C API variable ``freesasa_default_parameters``_.
-    """
     defaultParameters = {
         'algorithm'    : LeeRichards,
         'probe-radius' : freesasa_default_parameters.probe_radius,
@@ -204,6 +216,45 @@ cdef class Parameters:
         cdef freesasa_parameters **p = <freesasa_parameters**> ptr2ptr
         p[0] = &self._c_param
 
+class ResidueArea:
+    """
+    Stores absolute and relative areas for a residue
+
+    Attributes:
+        residueType (str): Type of Residue
+        residueNumber (str): Residue number
+        hasRelativeAreas (bool): False if there was noe reference area to calculate relative areas from
+
+        total (float): Total SASA of residue
+        polar (float): Polar SASA
+        apolar (float): Apolar SASA
+        mainChain (float): Main chain SASA
+        sideChain (float): Side chain SASA
+
+        relativeTotal (float): Relative total SASA
+        relativePolar (float): Relative polar SASA
+        relativeApolar (float): Relative Apolar SASA
+        relativeMainChain (float): Relative main chain SASA
+        relativeSideChain (float): Relative side chain SASA
+    """
+
+    residueType = ""
+    residueNumber = ""
+    hasRelativeAreas = False
+
+    total = 0
+    polar = 0
+    apolar = 0
+    mainChain = 0
+    sideChain = 0
+
+    relativeTotal = 0
+    relativePolar = 0
+    relativeApolar = 0
+    relativeMainChain = 0
+    relativeSideChain = 0
+
+
 cdef class Result:
     """
     Stores results from SASA calculation.
@@ -211,16 +262,21 @@ cdef class Result:
     The type of object returned by :py:func:`freesasa.calc()`,
     not intended to be used outside of that context.
     """
+
     cdef freesasa_result* _c_result
+    cdef freesasa_node* _c_root_node
 
     ## The constructor
     def __init__ (self):
         self._c_result = NULL
+        self._c_root_node = NULL
 
     ## The destructor
     def __dealloc__(self):
         if self._c_result is not NULL:
             freesasa_result_free(self._c_result)
+        if self._c_root_node is not NULL:
+            freesasa_node_free(self._c_root_node)
 
     def nAtoms(self):
         """
@@ -232,7 +288,6 @@ cdef class Result:
         if self._c_result is not NULL:
             return self._c_result.n_atoms
         return 0
-
 
     def totalArea(self):
         """
@@ -263,6 +318,82 @@ cdef class Result:
         assert(self._c_result is not NULL)
         assert(i < self._c_result.n_atoms)
         return self._c_result.sasa[i]
+
+    def residueAreas(self):
+        """
+        Get SASA for all residues including relative areas if available for the
+        classifier used.
+
+        Returns dictionary of results where first dimension is chain label and
+        the second dimension residue number. I.e. ``result["A"]["5"]`` gives the
+        :py:class:`freesasa.ResidueArea` of residue number 5 in chain A.
+
+        Relative areas are normalized to 1, but can be larger than one for
+        residues in unusual conformations or at the ends of chains.
+
+        Returns:
+            dictionary
+
+        Raise:
+            AssertionError: If no results or structure has been associated
+                 with the object.
+        """
+        assert(self._c_result is not NULL)
+        assert(self._c_root_node is not NULL, "Result.residueAreas can only be called on results generated directly or indirectly by freesasa.calc()")
+
+        cdef freesasa_node* result_node = <freesasa_node*> freesasa_node_children(self._c_root_node)
+        cdef freesasa_node* structure = <freesasa_node*> freesasa_node_children(result_node)
+        cdef freesasa_node* chain
+        cdef freesasa_node* residue
+        cdef freesasa_nodearea* c_area
+        cdef freesasa_nodearea* c_ref_area
+
+        result = {}
+
+        chain = <freesasa_node*> freesasa_node_children(structure)
+        while (chain != NULL):
+            residue  = <freesasa_node*> freesasa_node_children(chain)
+            chainLabel = freesasa_node_name(chain)
+            result[chainLabel] = {}
+
+            while (residue != NULL):
+                c_area = <freesasa_nodearea*> freesasa_node_area(residue)
+                c_ref_area = <freesasa_nodearea*> freesasa_node_residue_reference(residue)
+                residueNumber = freesasa_node_residue_number(residue).strip()
+                residueType = freesasa_node_name(residue).strip()
+
+                area = ResidueArea()
+
+                area.residueType = residueType
+                area.residueNumber = residueNumber
+
+                area.total = c_area.total
+                area.mainChain = c_area.main_chain
+                area.sideChain = c_area.side_chain
+                area.polar = c_area.polar
+                area.apolar = c_area.apolar
+
+                if (c_ref_area is not NULL):
+                    area.hasRelativeAreas = True
+                    area.relativeTotal = self._safe_div(c_area.total, c_ref_area.total)
+                    area.relativeMainChain = self._safe_div(c_area.main_chain, c_ref_area.main_chain)
+                    area.relativeSideChain = self._safe_div(c_area.side_chain, c_ref_area.side_chain)
+                    area.relativePolar = self._safe_div(c_area.polar, c_ref_area.polar)
+                    area.relativeApolar = self._safe_div(c_area.apolar, c_ref_area.apolar)
+
+                result[chainLabel][residueNumber] = area
+
+                residue = <freesasa_node*> freesasa_node_next(residue)
+
+            chain = <freesasa_node*> freesasa_node_next(chain)
+
+        return result
+
+    def _safe_div(self,a,b):
+        try:
+            return a/b
+        except ZeroDivisionError:
+            return float('nan')
 
     def _get_address(self, size_t ptr2ptr):
         cdef freesasa_result **p = <freesasa_result**> ptr2ptr
@@ -409,12 +540,23 @@ cdef class Structure:
     Since it is intended to be a static structure the word 'get' is
     omitted in the getter-functions.
 
+    The default options are:
+    ::
+        defaultOptions = {
+          'hetatm' : False,
+          'hydrogen' : False,
+          'join-models' : False,
+          'skip-unknown' : False,
+          'halt-at-unknown' : False
+          }
+
     Attributes:
           defaultOptions: Default options for reading structure from PDB.
               By default ignore HETATM, Hydrogens, only use first
               model. For unknown atoms try to guess the radius, if
               this fails, assign radius 0 (to allow changing the
               radius later).
+
     """
     cdef freesasa_structure* _c_structure
 
@@ -425,9 +567,6 @@ cdef class Structure:
           'skip-unknown' : False,
           'halt-at-unknown' : False
           }
-    """
-    Default options for creating :py:class:`.Structure`
-    """
 
     defaultStructureArrayOptions = {
           'hetatm' : False,
@@ -435,9 +574,6 @@ cdef class Structure:
           'separate-chains' : True,
           'separate-models' : False
     }
-    """
-    Default options for :py:func:`.structureArray`.
-    """
 
     def __init__(self,fileName=None,classifier=None,
                  options = defaultOptions):
@@ -845,8 +981,11 @@ def calc(structure,parameters=None):
     structure._get_address(<size_t>&s)
     result = Result()
     result._c_result = <freesasa_result*> freesasa_calc_structure(s,p)
+    result._c_root_node = <freesasa_node*> freesasa_tree_init(result._c_result,
+                                                              s, "Structure")
     if result._c_result is NULL:
         raise Exception("Error calculating SASA.")
+
     return result
 
 def calcCoord(coord, radii, parameters=None):
@@ -1033,7 +1172,7 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
 
     Usage::
 
-        result, sasa_classes = calcBioPDB(structure, ...)
+        result, sasa_classes, residue_areas = calcBioPDB(structure, ...)
 
     Experimental, not thorougly tested yet
 
@@ -1045,8 +1184,9 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
             (uses :py:attr:`.Structure.defaultOptions` if none specified
 
     Returns:
-        A :py:class:`.Result` object and a dictionary with classes
-        defined by the classifier and associated areas
+        A :py:class:`.Result` object, a dictionary with classes
+        defined by the classifier and associated areas,
+        and a dictionary of the type returned by :py:meth:`.Result.residueAreas`.
 
     Raises:
         Exception: if unknown atom is encountered and the option
@@ -1056,5 +1196,13 @@ def calcBioPDB(bioPDBStructure, parameters = Parameters(),
     """
     structure = structureFromBioPDB(bioPDBStructure, classifier, options)
     result = calc(structure, parameters)
+
+    # Hack!:
+    # This calculation depends on the structure not having been deallocated,
+    # calling it later will cause seg-faults. By calling it now the result
+    # is stored.
+    # TODO: See if there is a refactoring that solves this in a more elegant way
+    # residue_areas = result.residueAreas()
+
     sasa_classes = classifyResults(result, structure, classifier)
-    return result, sasa_classes
+    return result, sasa_classes #, residue_areas

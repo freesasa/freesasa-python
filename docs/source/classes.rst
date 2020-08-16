@@ -22,7 +22,11 @@ Result
 
 .. autoclass:: freesasa.Result
     :members:
-    :special-members:
+
+ResidueArea
+-----------
+.. autoclass:: freesasa.ResidueArea
+   :members:
 
 Structure
 ---------

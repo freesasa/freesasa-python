@@ -2,6 +2,7 @@ from freesasa import *
 import unittest
 import math
 import os
+import faulthandler
 
 # this class tests using derived classes to create custom Classifiers
 class DerivedClassifier(Classifier):
@@ -225,6 +226,23 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertTrue(math.fabs(sasa_classes['Polar'] - 2515.821238) < 1e-5)
         self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2318.895027) < 1e-5)
 
+        # test residue areas
+        residueAreas = result.residueAreas()
+        a76 = residueAreas['A']['76']
+        self.assertEqual(a76.residueType, "GLY")
+        self.assertEqual(a76.residueNumber, "76")
+        self.assertTrue(a76.hasRelativeAreas)
+        self.assertTrue(math.fabs(a76.total - 142.1967898) < 1e-5)
+        self.assertTrue(math.fabs(a76.mainChain - 142.1967898) < 1e-5)
+        self.assertTrue(math.fabs(a76.sideChain - 0) < 1e-5)
+        self.assertTrue(math.fabs(a76.polar - 97.297889) < 1e-5)
+        self.assertTrue(math.fabs(a76.apolar - 44.898900) < 1e-5)
+        self.assertTrue(math.fabs(a76.relativeTotal - 1.75357) < 1e-4)
+        self.assertTrue(math.fabs(a76.relativeMainChain - 1.75357) < 1e-4)
+        self.assertTrue(math.isnan(a76.relativeSideChain))
+        self.assertTrue(math.fabs(a76.relativePolar - 2.17912) < 1e-4)
+        self.assertTrue(math.fabs(a76.relativeApolar - 1.23213) < 1e-4)
+
         # test L&R
         result = calc(structure,Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
         sasa_classes = classifyResults(result,structure)
@@ -245,6 +263,7 @@ class FreeSASATestCase(unittest.TestCase):
         sasa_classes = classifyResults(result,structure,classifier) # classifier passed to get user-classes
         self.assertTrue(math.fabs(sasa_classes['Polar'] - 2236.9298941) < 1e-5)
         self.assertTrue(math.fabs(sasa_classes['Apolar'] - 2542.5810983) < 1e-5)
+
 
     def testCalcCoord(self):
         # one unit sphere
@@ -283,7 +302,7 @@ class FreeSASATestCase(unittest.TestCase):
             pass
         else:
             parser = PDBParser(QUIET=True)
-            bp_structure = parser.get_structure("Ubiquitin","lib/tests/data/1a0q.pdb")
+            bp_structure = parser.get_structure("29G11","lib/tests/data/1a0q.pdb")
             s1 = structureFromBioPDB(bp_structure)
             s2 = Structure("lib/tests/data/1a0q.pdb")
             self.assertTrue(s1.nAtoms() == s2.nAtoms())
@@ -310,11 +329,16 @@ class FreeSASATestCase(unittest.TestCase):
             sasa_classes = classifyResults(result, s1)
             self.assertTrue(math.fabs(sasa_classes['Polar'] - 9143.066411) < 1e-3)
             self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9780.2141746) < 1e-3)
+            residue_areas = result.residueAreas()
+            self.assertTrue(math.fabs(residue_areas['L']['2'].total - 43.714) < 1e-2)
 
-            result, sasa_classes = calcBioPDB(bp_structure, Parameters({'algorithm' : ShrakeRupley}))
-            self.assertTrue(math.fabs(result.totalArea() - 18908.900192) < 1e-3)
-            self.assertTrue(math.fabs(sasa_classes['Polar'] - 9120.7423269) < 1e-3)
-            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9788.157865) < 1e-3)
+            faulthandler.enable()
+            result, sasa_classes = calcBioPDB(bp_structure, Parameters({'algorithm' : LeeRichards, 'n-slices' : 20}))
+            self.assertTrue(math.fabs(result.totalArea() - 18923.280586) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Polar'] - 9143.066411) < 1e-3)
+            self.assertTrue(math.fabs(sasa_classes['Apolar'] - 9780.2141746) < 1e-3)
+            residue_areas = result.residueAreas()
+            self.assertTrue(math.fabs(residue_areas['L']['2'].total - 43.714) < 1e-2)
 
 
 if __name__ == '__main__':

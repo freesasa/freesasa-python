@@ -45,6 +45,12 @@ cdef extern from "freesasa.h":
         double apolar
         double unknown
 
+    ctypedef struct freesasa_node:
+        pass
+
+    ctypedef enum freesasa_nodetype:
+        pass
+
     ctypedef struct freesasa_classifier:
         pass
 
@@ -176,3 +182,53 @@ cdef extern from "freesasa.h":
     char freesasa_structure_atom_chain(const freesasa_structure *structure, int i)
 
     const double* freesasa_structure_coord_array(const freesasa_structure *structure)
+
+
+    freesasa_nodearea freesasa_result_classes(const freesasa_structure *structure,
+                                              const freesasa_result *result)
+
+    freesasa_node * freesasa_tree_init(const freesasa_result *result,
+                                       const freesasa_structure *structure,
+                                       const char *name)
+
+    int freesasa_node_free(freesasa_node *root)
+
+    const freesasa_nodearea * freesasa_node_area(const freesasa_node *node)
+
+    freesasa_node * freesasa_node_children(freesasa_node *node)
+
+    freesasa_node * freesasa_node_next(freesasa_node *node)
+
+    freesasa_node * freesasa_node_parent(freesasa_node *node)
+
+    freesasa_nodetype freesasa_node_type(const freesasa_node *node)
+
+    const char * freesasa_node_name(const freesasa_node *node)
+
+    const char * freesasa_node_classified_by(const freesasa_node *node)
+
+    int freesasa_node_atom_is_polar(const freesasa_node *node)
+
+    int freesasa_node_atom_is_mainchain(const freesasa_node *node)
+
+    double freesasa_node_atom_radius(const freesasa_node *node)
+
+    const char * freesasa_node_atom_pdb_line(const freesasa_node *node)
+
+    const char * freesasa_node_residue_number(const freesasa_node *node)
+
+    int freesasa_node_residue_n_atoms(const freesasa_node *node)
+
+    const freesasa_nodearea * freesasa_node_residue_reference(const freesasa_node *node)
+
+    int freesasa_node_chain_n_residues(const freesasa_node *node)
+
+    int freesasa_node_structure_n_chains(const freesasa_node *node)
+
+    int freesasa_node_structure_n_atoms(const freesasa_node *node)
+
+    const char * freesasa_node_structure_chain_labels(const freesasa_node *node)
+
+    int freesasa_node_structure_model(const freesasa_node *node)
+
+    const freesasa_result * freesasa_node_structure_result(const freesasa_node *node)
