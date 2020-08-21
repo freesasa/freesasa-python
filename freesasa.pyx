@@ -326,7 +326,7 @@ cdef class Result:
 
         Returns dictionary of results where first dimension is chain label and
         the second dimension residue number. I.e. ``result["A"]["5"]`` gives the
-        :py:class:`freesasa.ResidueArea` of residue number 5 in chain A.
+        :py:class:`.ResidueArea` of residue number 5 in chain A.
 
         Relative areas are normalized to 1, but can be larger than one for
         residues in unusual conformations or at the ends of chains.
