@@ -559,6 +559,8 @@ cdef class Structure:
 
     """
     cdef freesasa_structure* _c_structure
+    cdef const freesasa_classifier* _c_classifier
+    cdef int _c_options
 
     defaultOptions = {
           'hetatm' : False,
@@ -575,7 +577,7 @@ cdef class Structure:
           'separate-models' : False
     }
 
-    def __init__(self,fileName=None,classifier=None,
+    def __init__(self, fileName=None, classifier=None,
                  options = defaultOptions):
         """
         Constructor
@@ -588,7 +590,12 @@ cdef class Structure:
         Args:
             fileName (str): PDB file (if `None` empty structure generated).
             classifier: An optional :py:class:`.Classifier` to calculate atomic
-                radii, uses default if none provided
+                radii, uses default if none provided.
+                This classifier will also be used in calls to :py:meth:`.Structure.addAtom()`
+                but only if it's the default classifier, one of the standard
+                classifiers from :py:meth:`.Classifier.getStandardClassifier()`,
+                or defined by a config-file (i.e. if it is defined in the underlying
+                C API).
             options (dict): specify which atoms and models to include, default is
                 :py:attr:`.Structure.defaultOptions`
 
@@ -601,25 +608,30 @@ cdef class Structure:
         """
 
         self._c_structure = NULL
-        cdef freesasa_classifier *c = NULL
+        self._c_classifier = NULL
+
         if classifier is None:
             classifier = Classifier()
         if classifier._isCClassifier():
-            classifier._get_address(<size_t>&c)
+            classifier._get_address(<size_t>&self._c_classifier)
+
+        self._c_options = Structure._get_structure_options(options)
 
         if fileName is None:
             self._c_structure = freesasa_structure_new()
-            return
+        else:
+            self._initFromFile(fileName, classifier)
+
+    def _initFromFile(self, fileName, classifier):
         cdef FILE *input
         input = fopen(fileName,'rb')
         if input is NULL:
             raise IOError("File '%s' could not be opened." % fileName)
-        structure_options = Structure._get_structure_options(options)
 
         if not classifier._isCClassifier(): # supress warnings
             setVerbosity(silent)
 
-        self._c_structure = freesasa_structure_from_pdb(input, c, structure_options)
+        self._c_structure = freesasa_structure_from_pdb(input, self._c_classifier, self._c_options)
 
         if not classifier._isCClassifier():
             setVerbosity(normal)
@@ -641,12 +653,14 @@ cdef class Structure:
         Add atom to structure.
 
         This function is meant to be used if the structure was not
-        initialized from a PDB. Default radii will be assigned to each
-        atom. This can be overriden by calling
+        initialized from a PDB. The options and classifier passed to
+        the constructor for the :py:class:`.Structure` will be used
+        (see the documentation of the constructor for restrictions).
+        The radii set by the classifier can be overriden by calling
         :py:meth:`.Structure.setRadiiWithClassifier()` afterwards.
 
         There are no restraints on string lengths for the arguments, but
-        the atom won't be added if the default classifier doesn't
+        the atom won't be added if the classifier doesn't
         recognize the atom and also cannot deduce its element from the
         atom name.
 
@@ -661,6 +675,7 @@ cdef class Structure:
 
         Raises:
             Exception: Residue-number invalid
+            AssertionError:
         """
         if (type(residueNumber) is str):
             resnum = residueNumber
@@ -668,10 +683,15 @@ cdef class Structure:
             resnum = "%d" % residueNumber
         else:
             raise Exception("Residue-number invalid, must be either string or number")
+
         cdef const char *label = chainLabel
-        ret = freesasa_structure_add_atom(self._c_structure, atomName,
-                                          residueName, resnum, label[0],
-                                          x, y, z)
+
+        ret = freesasa_structure_add_atom_wopt(
+            self._c_structure, atomName,
+            residueName, resnum, label[0],
+            x, y, z,
+            self._c_classifier, self._c_options)
+
         assert(ret != FREESASA_FAIL)
 
     def setRadiiWithClassifier(self,classifier):

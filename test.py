@@ -170,6 +170,21 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertRaises(Exception, lambda : Structure("lib/tests/data/1d3z.pdb", None, {'hydrogen' : True, 'halt-at-unknown' : True}))
         setVerbosity(normal)
 
+        s = Structure(options = { 'halt-at-unknown': True })
+        setVerbosity(silent)
+        self.assertRaises(Exception, lambda: s.addAtom(' XX ','ALA','   1','A',1,1,1))
+        setVerbosity(normal)
+
+        s = Structure(options = { 'skip-unknown': True })
+        setVerbosity(silent)
+        s.addAtom(' XX ','ALA','   1','A',1,1,1)
+        self.assertEqual(s.nAtoms(), 0)
+        setVerbosity(normal)
+
+        s = Structure(classifier = Classifier.getStandardClassifier("naccess"))
+        s.addAtom(' CA ', 'ALA','   1','A',1,1,1)
+        self.assertEqual(s.radius(0), 1.87)
+
     def testStructureArray(self):
         # default separates chains, only uses first model (129 atoms per chain)
         ss = structureArray("lib/tests/data/2jo4.pdb")
