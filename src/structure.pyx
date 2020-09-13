@@ -6,27 +6,31 @@ cdef class Structure:
     Represents a protein structure, including its atomic radii.
 
     Initialized from PDB-file. Calculates atomic radii using default
-    classifier, or custom one provided as argument to initalizer
+    classifier, or custom one provided as argument to initalizer.
 
-    Since it is intended to be a static structure the word 'get' is
-    omitted in the getter-functions.
+    Default options are ::
 
-    The default options are:
-    ::
-        defaultOptions = {
-          'hetatm' : False,
-          'hydrogen' : False,
-          'join-models' : False,
-          'skip-unknown' : False,
-          'halt-at-unknown' : False
-          }
+        Structure.defaultOptions = {
+            'hetatm' : False,          # False: skip HETATM
+                                       # True: include HETATM
+
+            'hydrogen' : False,        # False: ignore hydrogens
+                                       # True: include hydrogens
+
+            'join-models' : False,     # False: Only use the first MODEL
+                                       # True: Include all MODELs
+
+            'skip-unknown' : False,    # False: Guess radius for unknown atoms
+                                       #     based on element
+                                       # True: Skip unknown atoms
+
+            'halt-at-unknown' : False  # False: set radius for unknown atoms,
+                                       #    that can not be guessed to 0.
+                                       # True: Throw exception on unknown atoms.
+        }
 
     Attributes:
-          defaultOptions: Default options for reading structure from PDB.
-              By default ignore HETATM, Hydrogens, only use first
-              model. For unknown atoms try to guess the radius, if
-              this fails, assign radius 0 (to allow changing the
-              radius later).
+        defaultOptions:  Default options for reading structure from PDB.
 
     """
     cdef freesasa_structure* _c_structure
@@ -34,18 +38,18 @@ cdef class Structure:
     cdef int _c_options
 
     defaultOptions = {
-          'hetatm' : False,
-          'hydrogen' : False,
-          'join-models' : False,
-          'skip-unknown' : False,
-          'halt-at-unknown' : False
-          }
+        'hetatm' : False,
+        'hydrogen' : False,
+        'join-models' : False,
+        'skip-unknown' : False,
+        'halt-at-unknown' : False
+    }
 
     defaultStructureArrayOptions = {
-          'hetatm' : False,
-          'hydrogen' : False,
-          'separate-chains' : True,
-          'separate-models' : False
+        'hetatm' : False,
+        'hydrogen' : False,
+        'separate-chains' : True,
+        'separate-models' : False
     }
 
     def __init__(self, fileName=None, classifier=None,
@@ -53,10 +57,10 @@ cdef class Structure:
         """
         Constructor
 
-        If PDB file is provided, the structure will be constructed
+        If a PDB file is provided, the structure will be constructed
         based on the file. If not, this simply initializes an empty
-        structure and the other arguments are ignored. In this case
-        atoms will have to be added manually using addAtom().
+        structure with the given classifier and options. Atoms will then
+        have to be added manually using `:py:meth:`.Structure.addAtom()`.
 
         Args:
             fileName (str): PDB file (if `None` empty structure generated).
@@ -65,7 +69,7 @@ cdef class Structure:
                 This classifier will also be used in calls to :py:meth:`.Structure.addAtom()`
                 but only if it's the default classifier, one of the standard
                 classifiers from :py:meth:`.Classifier.getStandardClassifier()`,
-                or defined by a config-file (i.e. if it is defined in the underlying
+                or defined by a config-file (i.e. if it uses the underlying
                 C API).
             options (dict): specify which atoms and models to include, default is
                 :py:attr:`.Structure.defaultOptions`

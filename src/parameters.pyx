@@ -10,9 +10,9 @@ cdef class Parameters:
     """
     Stores parameter values to be used by calculation.
 
-    Default parameters are
-    ::
-        defaultParameters = {
+    Default parameters are ::
+
+        Parameters.defaultParameters = {
             'algorithm'    : LeeRichards,
             'probe-radius' : freesasa_default_parameters.probe_radius,
             'n-points'     : freesasa_default_parameters.shrake_rupley_n_points,
