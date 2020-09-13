@@ -8,10 +8,9 @@ environment:
     REQUIREMENTS: requirements.txt
     TWINE_USERNAME: mittinatten
     TWINE_PASSWORD:
-        secure: PE3DJXf2VYmUlH1Vo6CoMA==
+      secure: PE3DJXf2VYmUlH1Vo6CoMA==
 
   matrix:
-
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
@@ -32,7 +31,7 @@ environment:
       PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Python38-x64"
+    - PYTHON: "C:\\Python38"
       PYTHON_VERSION: "3.8.x"
       PYTHON_ARCH: "32"
 
@@ -46,15 +45,16 @@ install:
   # purpose but it is problematic because it tends to cancel builds pushed
   # directly to master instead of just PR builds (or the converse).
   # credits: JuliaLang developers.
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
-        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
-        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
-          throw "There are newer queued builds for this pull request, failing early." }
+  - ps:
+      if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+      https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+      Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+      throw "There are newer queued builds for this pull request, failing early." }
   - ECHO "Filesystem root:"
-  - ps: "ls \"C:/\""
+  - ps: 'ls "C:/"'
 
   - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+  - ps: 'ls "C:/Program Files/Microsoft SDKs/Windows"'
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
@@ -67,7 +67,7 @@ install:
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - 'python -c "import struct; print(struct.calcsize(''P'') * 8)"'
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
