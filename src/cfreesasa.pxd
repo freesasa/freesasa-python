@@ -10,19 +10,19 @@ cdef extern from "freesasa.h":
     ctypedef enum freesasa_atom_class:
         FREESASA_ATOM_APOLAR, FREESASA_ATOM_POLAR, FREESASA_ATOM_UNKNOWN
 
-    cdef int FREESASA_SUCCESS
-    cdef int FREESASA_FAIL
-    cdef int FREESASA_WARN
+    cdef const int FREESASA_SUCCESS
+    cdef const int FREESASA_FAIL
+    cdef const int FREESASA_WARN
 
-    cdef int FREESASA_INCLUDE_HETATM
-    cdef int FREESASA_INCLUDE_HYDROGEN
-    cdef int FREESASA_SEPARATE_CHAINS
-    cdef int FREESASA_SEPARATE_MODELS
-    cdef int FREESASA_JOIN_MODELS
-    cdef int FREESASA_HALT_AT_UNKNOWN
-    cdef int FREESASA_SKIP_UNKNOWN
+    cdef const int FREESASA_INCLUDE_HETATM
+    cdef const int FREESASA_INCLUDE_HYDROGEN
+    cdef const int FREESASA_SEPARATE_CHAINS
+    cdef const int FREESASA_SEPARATE_MODELS
+    cdef const int FREESASA_JOIN_MODELS
+    cdef const int FREESASA_HALT_AT_UNKNOWN
+    cdef const int FREESASA_SKIP_UNKNOWN
 
-    cdef int FREESASA_MAX_SELECTION_NAME
+    cdef const int FREESASA_MAX_SELECTION_NAME
 
     ctypedef struct freesasa_parameters:
         freesasa_algorithm alg

@@ -8,7 +8,7 @@ USE_CYTHON = False
 try:
     USE_CYTHON = os.environ['USE_CYTHON']
 except KeyError:
-    if not os.path.isfile("freesasa.c"):
+    if not os.path.isfile(os.path.join("src", "freesasa.c")):
         sys.stderr.write("No C source detected, define environment variable USE_CYTHON to build from Cython source.\n")
         sys.exit()
     else:
@@ -28,10 +28,8 @@ sources = list(map(lambda file: os.path.join('lib', 'src', file),
 
 extensions = None
 
-if USE_CYTHON:
-    sources.append("freesasa.pyx")
-else:
-    sources.append("freesasa.c")
+ext = '.pyx' if USE_CYTHON else '.c'
+sources.append(os.path.join('src', 'freesasa' + ext))
 
 compile_args=['-DHAVE_CONFIG_H']
 
