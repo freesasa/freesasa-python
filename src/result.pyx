@@ -173,6 +173,13 @@ cdef class Result:
 
         return result
 
+    def write_pdb(self, filename):
+        cdef FILE *f = NULL
+
+        f = fopen(filename, 'w')
+        freesasa_write_pdb(f, self._c_root_node)
+        fclose(f)
+
     def _safe_div(self,a,b):
         try:
             return a/b
