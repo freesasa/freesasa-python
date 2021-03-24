@@ -1,5 +1,9 @@
 # Changelog
 
+# 2.2.0 Pre-release
+
+- Add `Result.write_pdb()`
+
 # 2.1.0
 
 - Added changelog
