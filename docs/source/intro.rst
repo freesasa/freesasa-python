@@ -164,4 +164,4 @@ Here is a simple example on how to turn a calculated result into a PDB file.
     result = freesasa.calc(structure)
     result.write_pdb('2ubq.sasa.pdb')
 
-This does not always work if the input pdb file was parsed with BioPython. 
+This only works if the input file was parsed with `Freesasa.Structure()`. 
