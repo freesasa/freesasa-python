@@ -232,3 +232,6 @@ cdef extern from "freesasa.h":
     int freesasa_node_structure_model(const freesasa_node *node)
 
     const freesasa_result * freesasa_node_structure_result(const freesasa_node *node)
+
+cdef extern from "freesasa_internal.h":
+    int freesasa_write_pdb(FILE *output, freesasa_node *structure)

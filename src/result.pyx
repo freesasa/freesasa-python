@@ -173,6 +173,29 @@ cdef class Result:
 
         return result
 
+    def write_pdb(self, filename):
+        if self._c_root_node is NULL:
+            raise AssertionError('Result root node points to NULL. Unable to write to a pdb file.')
+
+        cdef freesasa_node *result_node    = <freesasa_node*> freesasa_node_children(self._c_root_node)
+        cdef freesasa_node *structure_node = <freesasa_node*> freesasa_node_children(result_node)
+        cdef freesasa_node *chain_node     = <freesasa_node*> freesasa_node_children(structure_node)
+        cdef freesasa_node *residue_node   = <freesasa_node*> freesasa_node_children(chain_node)
+        cdef freesasa_node *atom_node      = <freesasa_node*> freesasa_node_children(residue_node)
+
+        cdef const char * atom_pdb_line    =  freesasa_node_atom_pdb_line(atom_node)
+
+        if atom_pdb_line is NULL:
+            raise AssertionError(
+                "Atom PDB Line is NULL. You are probably trying to write a PDB file from a Bio.Structure."
+            )
+        
+        cdef FILE *f = NULL
+
+        f = fopen(filename, 'w')
+        freesasa_write_pdb(f, self._c_root_node)
+        fclose(f)
+
     def _safe_div(self,a,b):
         try:
             return a/b

@@ -149,3 +149,19 @@ If one needs more control over the analysis the structure can be
 converted to a :py:class:`.Structure` using :py:func:`.structureFromBioPDB()`
 and the calculation can be performed the normal way using this
 structure.
+
+Writing a FreeSASA PDB
+-------
+
+Here is a simple example on how to turn a calculated result into a PDB file.
+
+
+.. code:: python
+
+    import freesasa
+
+    structure = freesasa.Structure('2ubq.pdb')
+    result = freesasa.calc(structure)
+    result.write_pdb('2ubq.sasa.pdb')
+
+This only works if the input file was parsed with `Freesasa.Structure()`. 
