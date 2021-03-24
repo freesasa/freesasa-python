@@ -36,6 +36,7 @@ install:
     # Make the newly installed version the default "python" command.
     - pyenv global $PYVER
     - python --version
+    - pip install --upgrade pip
     - pip install -r requirements.txt
     - git submodule update --init
 
