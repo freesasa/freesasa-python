@@ -174,6 +174,35 @@ cdef class Result:
         return result
 
     def write_pdb(self, filename):
+        assert(self._c_root_node is not NULL, 'Result root node points to NULL. Unable to write to a pdb file.')
+
+        cdef freesasa_node *result_node    = <freesasa_node*> freesasa_node_children(self._c_root_node)
+        cdef freesasa_node *structure_node = <freesasa_node*> freesasa_node_children(result_node)
+        cdef freesasa_node *chain_node     = <freesasa_node*> freesasa_node_children(structure_node)
+        cdef freesasa_node *residue_node   = <freesasa_node*> freesasa_node_children(chain_node)
+        cdef freesasa_node *atom_node      = <freesasa_node*> freesasa_node_children(residue_node)
+
+        resultName = <bytes> freesasa_node_name(result_node)
+        structName = <bytes> freesasa_node_name(structure_node)
+        chainName  = <bytes> freesasa_node_name(chain_node)
+        resName    = <bytes> freesasa_node_name(residue_node)
+        atomName   = <bytes> freesasa_node_name(atom_node)
+
+        atom_pdb_line =  freesasa_node_atom_pdb_line(atom_node)
+
+        assert(atom_pdb_line is not NULL, "Atom PDB Line returned a Null Pointer")
+
+        py_atom_pdb_line = <bytes> atom_pdb_line
+
+        print('result Name:   ', resultName) 
+        print('struct Name:   ', structName) 
+        print('chain Name:    ', chainName) 
+        print('res Name:      ', resName) 
+        print('atom Name:     ', atomName) 
+        print('atom PDB Line: ', py_atom_pdb_line)
+       
+        exit()
+        
         cdef FILE *f = NULL
 
         f = fopen(filename, 'w')
