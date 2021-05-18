@@ -174,12 +174,12 @@ cdef class Structure:
         Add multiple atoms to structure.
 
         Args:
-            atomNames (list): list of atom name (e.g. `"CA"`)
-            residueNames (list): list of residue name (e.g. `"ALA"`)
-            residueNumbers (list): list of residue number (e.g. `'12'`)
+            atomNames (list): list of atom name (e.g. `["CA"]`)
+            residueNames (list): list of residue name (e.g. `["ALA"]`)
+            residueNumbers (list): list of residue number (e.g. `['12']`)
                 or integer. Some PDBs have residue-numbers that aren't
                 regular numbers. Therefore treated as a string primarily.
-            chainLabels (list): list of 1-character string with chain label (e.g. 'A')
+            chainLabels (list): list of 1-character string with chain label (e.g. ['A'])
                 xs,ys,zs (list): list of coordinates
 
         Raises:
