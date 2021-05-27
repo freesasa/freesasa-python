@@ -118,8 +118,14 @@ class FreeSASATestCase(unittest.TestCase):
         self.assertTrue(s.chainLabel(0) == 'A')
         self.assertTrue(s.nAtoms() == 1)
         x, y, z = s.coord(0)
-        self.assertTrue(x == 1 and y ==1 and z ==1)
+        self.assertTrue(x == 1 and y == 1 and z == 1)
         s.addAtom(' CB ','ALA',2,'A',2,1,1)
+        self.assertTrue(s.nAtoms() == 2)
+        self.assertTrue(s.residueNumber(1) == '2')
+
+        # reinitialize s and test addAtoms function
+        s = Structure()
+        s.addAtoms([' CA ',' CB '], ['ALA','ALA'],['   1',2],['A','A'],[1,2],[1,1],[1,1])
         self.assertTrue(s.nAtoms() == 2)
         self.assertTrue(s.residueNumber(1) == '2')
 
