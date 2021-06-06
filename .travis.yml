@@ -1,5 +1,7 @@
 # A lot of inspiration from https://github.com/project-rig/rig_c_sa
 
+# could be done using language python and a more complicated matrix,
+# but this allows us to use the same setup on mac and linux
 language: generic
 
 sudo: false
@@ -28,7 +30,7 @@ install:
     - git clone https://github.com/yyuu/pyenv.git ~/.pyenv
     - PYENV_ROOT="$HOME/.pyenv"
     - PATH="$PYENV_ROOT/bin:$PATH"
-    - eval "$(pyenv init -)"
+    - eval "$(pyenv init --path)"
     # Install the latest release of the specified Python version using pyenv.
     - PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
     - echo "Selected Python $PYVER"
