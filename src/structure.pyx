@@ -169,6 +169,29 @@ cdef class Structure:
 
         assert(ret != FREESASA_FAIL)
 
+    def addAtoms(self, atomNames, residueNames, residueNumbers, chainLabels, xs, ys, zs):
+        """
+        Add multiple atoms to structure.
+
+        Args:
+            atomNames (list): list of atom name (e.g. `["CA"]`)
+            residueNames (list): list of residue name (e.g. `["ALA"]`)
+            residueNumbers (list): list of residue number (e.g. `['12']`)
+                or integer. Some PDBs have residue-numbers that aren't
+                regular numbers. Therefore treated as a string primarily.
+            chainLabels (list): list of 1-character string with chain label (e.g. ['A'])
+                xs,ys,zs (list): list of coordinates
+
+        Raises:
+            AssertionError: inconsistent size of input args
+        """
+        assert(len(set([len(atomNames), len(residueNames), len(residueNumbers), \
+            len(chainLabels), len(xs), len(ys), len(zs)])) == 1), "Inconsistent size of input args"
+        
+        for i in range(len(atomNames)):
+            self.addAtom(atomNames[i], residueNames[i], residueNumbers[i], \
+                chainLabels[i], xs[i], ys[i], zs[i])
+
     def setRadiiWithClassifier(self,classifier):
         """
         Assign radii to atoms in structure using a classifier.
