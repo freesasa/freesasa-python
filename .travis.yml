@@ -1,6 +1,6 @@
 # A lot of inspiration from https://github.com/project-rig/rig_c_sa
 
-language: python
+language: generic
 
 sudo: false
 
@@ -13,16 +13,29 @@ dist: xenial
 os:
     - linux
     - osx
-python:
-    - 3.6
-    - 3.7
-    - 3.8
 
 env:
+    matrix:
+    - PYVER=3.6
+    - PYVER=3.7
+    - PYVER=3.8
     global:
     - USE_CYTHON=1
 
 install:
+    # Install 'pyenv': a utility for downloading and switching between multiple
+    # Python interpreters on the same system.
+    - git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+    - PYENV_ROOT="$HOME/.pyenv"
+    - PATH="$PYENV_ROOT/bin:$PATH"
+    - eval "$(pyenv init -)"
+    # Install the latest release of the specified Python version using pyenv.
+    - PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
+    - echo "Selected Python $PYVER"
+    - pyenv install $PYVER
+    # Make the newly installed version the default "python" command.
+    - pyenv global $PYVER
+    - python --version
     - pip install --upgrade pip
     - pip install -r requirements.txt
     - git submodule update --init
@@ -38,7 +51,7 @@ after_success:
             if [ "x$TRAVIS_OS_NAME" == "xosx" ]; then
                 python setup.py bdist_wheel;
                 # only submit sdist once
-                if [ $TRAVIS_PYTHON_VERSION == 3.8 ]; then
+                if [ "x$PYVER" == "x3.8" ]; then
                     python setup.py sdist
                 fi
             fi
