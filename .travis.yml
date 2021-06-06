@@ -1,5 +1,7 @@
 # A lot of inspiration from https://github.com/project-rig/rig_c_sa
 
+# could be done using language python and a more complicated matrix,
+# but this allows us to use the same setup on mac and linux
 language: generic
 
 sudo: false
