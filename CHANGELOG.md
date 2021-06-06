@@ -3,6 +3,7 @@
 # 2.2.0 Pre-release
 
 - Add `Result.write_pdb()`
+- Add `Structre.addAtoms()`
 
 # 2.1.0
 
