@@ -7,58 +7,58 @@ language: generic
 sudo: false
 
 cache:
-    directories:
+  directories:
     - "$HOME/.cache/pip"
     - "$HOME/.pyenv_cache"
 
 dist: xenial
 os:
-    - linux
-    - osx
+  - linux
+  - osx
 
 env:
-    matrix:
-    - PYVER=3.6
+  matrix:
     - PYVER=3.7
     - PYVER=3.8
-    global:
+    - PYVER=3.9
+  global:
     - USE_CYTHON=1
 
 install:
-    # Install 'pyenv': a utility for downloading and switching between multiple
-    # Python interpreters on the same system.
-    - git clone https://github.com/yyuu/pyenv.git ~/.pyenv
-    - PYENV_ROOT="$HOME/.pyenv"
-    - PATH="$PYENV_ROOT/bin:$PATH"
-    - eval "$(pyenv init --path)"
-    # Install the latest release of the specified Python version using pyenv.
-    - PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
-    - echo "Selected Python $PYVER"
-    - pyenv install $PYVER
-    # Make the newly installed version the default "python" command.
-    - pyenv global $PYVER
-    - python --version
-    - pip install --upgrade pip
-    - pip install -r requirements.txt
-    - git submodule update --init
+  # Install 'pyenv': a utility for downloading and switching between multiple
+  # Python interpreters on the same system.
+  - git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+  - PYENV_ROOT="$HOME/.pyenv"
+  - PATH="$PYENV_ROOT/bin:$PATH"
+  - eval "$(pyenv init --path)"
+  # Install the latest release of the specified Python version using pyenv.
+  - PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
+  - echo "Selected Python $PYVER"
+  - pyenv install $PYVER
+  # Make the newly installed version the default "python" command.
+  - pyenv global $PYVER
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+  - git submodule update --init
 
 script:
-    - python setup.py install
-    - python setup.py test
+  - python setup.py install
+  - python setup.py test
 
 after_success:
-    - >
-        if [ -n "$TRAVIS_TAG" ]; then
-            # can only upload binaries for osx
-            if [ "x$TRAVIS_OS_NAME" == "xosx" ]; then
-                python setup.py bdist_wheel;
-                # only submit sdist once
-                if [ "x$PYVER" == "x3.8" ]; then
-                    python setup.py sdist
-                fi
+  - >
+    if [ -n "$TRAVIS_TAG" ]; then
+        # can only upload binaries for osx
+        if [ "x$TRAVIS_OS_NAME" == "xosx" ]; then
+            python setup.py bdist_wheel;
+            # only submit sdist once
+            if [ "x$PYVER" == "x3.8" ]; then
+                python setup.py sdist
             fi
-            # twine env variables are set in Travis web config
-            twine upload --skip-existing dist/*;
-        else
-            echo "Will only deploy tagged releases"
         fi
+        # twine env variables are set in Travis web config
+        twine upload --skip-existing dist/*;
+    else
+        echo "Will only deploy tagged releases"
+    fi
