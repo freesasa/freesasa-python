@@ -361,6 +361,18 @@ class FreeSASATestCase(unittest.TestCase):
             residue_areas = result.residueAreas()
             self.assertTrue(math.fabs(residue_areas['L']['2'].total - 43.714) < 1e-2)
 
+            options = {'hetatm': False,
+                       'hydrogen': False,
+                       'join-models': False,
+                       'skip-unknown': True,
+                       'halt-at-unknown': False}
+            classifier = Classifier()
+
+            bp_structure = parser.get_structure("PDB_WITH_HYDROGENS","lib/tests/data/1d3z.pdb")
+            fs_structure = Structure("lib/tests/data/1d3z.pdb", classifier, options)
+
+            fsfrombp = structureFromBioPDB(bp_structure, classifier, options)
+            self.assertEqual(fs_structure.nAtoms(), fsfrombp.nAtoms())
 
 if __name__ == '__main__':
     # make sure we're in the right directory (if script is called from

@@ -187,7 +187,7 @@ cdef class Structure:
         """
         assert(len(set([len(atomNames), len(residueNames), len(residueNumbers), \
             len(chainLabels), len(xs), len(ys), len(zs)])) == 1), "Inconsistent size of input args"
-        
+
         for i in range(len(atomNames)):
             self.addAtom(atomNames[i], residueNames[i], residueNumbers[i], \
                 chainLabels[i], xs[i], ys[i], zs[i])
@@ -228,7 +228,7 @@ cdef class Structure:
         assert(r is not NULL)
         for i in range(0,n):
             r[i] = radiusArray[i]
-            assert(r[i] >= 0), "Error: Radius array is <= 0 for the residue: " + self.residueName(i) + " ,atom: " + self.atomName(i)
+            assert(r[i] >= 0), "Error: Radius is <= 0 (" + str(r[i]) + ") for the residue: " + self.residueName(i) + ", atom: " + self.atomName(i)
         freesasa_structure_set_radius(self._c_structure, r)
 
     def nAtoms(self):
@@ -508,12 +508,21 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
 
     atoms = bioPDBStructure.get_atoms()
 
+    if (not optbitfield & FREESASA_JOIN_MODELS):
+        models = bioPDBStructure.get_models()
+        atoms = next(models).get_atoms()
+
     for a in atoms:
         r = a.get_parent()
+        s = r.get_parent()
         hetflag, resseq, icode = r.get_id()
         resname = r.get_resname()
+        atomname = a.get_fullname()
+        element = a.element
 
         if (hetflag is not ' ' and not (optbitfield & FREESASA_INCLUDE_HETATM)):
+            continue
+        if (((element == "H") or (element == "D")) and not (optbitfield & FREESASA_INCLUDE_HYDROGEN)):
             continue
 
         c = r.get_parent()
@@ -521,13 +530,13 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
         if (icode):
             resseq = str(resseq) + str(icode)
 
-        if (classifier.classify(resname, a.get_fullname()) is 'Unknown'):
+        if (classifier.classify(resname, atomname) is 'Unknown'):
             if (optbitfield & FREESASA_SKIP_UNKNOWN):
                 continue
             if (optbitfield & FREESASA_HALT_AT_UNKNOWN):
                 raise Exception("Halting at unknown atom")
 
-        structure.addAtom(a.get_fullname(), r.get_resname(), resseq, c.get_id(),
+        structure.addAtom(atomname, r.get_resname(), resseq, c.get_id(),
                           v[0], v[1], v[2])
 
     structure.setRadiiWithClassifier(classifier)
