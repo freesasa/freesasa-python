@@ -1,7 +1,7 @@
-FreeSASA Python module
-======================
+# FreeSASA Python module
+
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/nyo51pv2ufj2yhcj/branch/master?svg=true)](https://ci.appveyor.com/project/mittinatten/freesasa-python/branch/master)
-[![Travis build status](https://travis-ci.org/freesasa/freesasa-python.svg?branch=master)](https://travis-ci.org/freesasa/freesasa-python)
+[![Travis build status](https://travis-ci.com/freesasa/freesasa-python.svg?branch=master)](https://travis-ci.com/freesasa/freesasa-python)
 
 The module provides Python bindings for the [FreeSASA C Library](https://github.com/mittinatten/freesasa).
 There are PyPi packages for Python 3.6+, on Linux, Mac OS X and Windows.
@@ -9,23 +9,25 @@ And it can be built from source for 2.7+ (Or by downloading older PyPi packages)
 Documentation can be found at http://freesasa.github.io/python/.
 
 Install the module by
-~~~~sh
+
+```sh
 pip install freesasa
-~~~~
+```
 
 Developers can clone the library, and then build the module by the following
-~~~~sh
+
+```sh
 git submodule update --init
 USE_CYTHON=1 python setup.py build
-~~~~
+```
 
 Tests can be run using
-~~~~sh
-python setup.py test
-~~~~
 
-Adding new features
-===================
+```sh
+python setup.py test
+```
+
+# Adding new features
 
 This Python module provides a limited mapping to the C API of FreeSASA.
 I wish to extend the module with more functionality out of the box,
