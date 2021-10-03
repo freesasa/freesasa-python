@@ -4,6 +4,7 @@
 
 - Add `Result.write_pdb()`
 - Add `Structre.addAtoms()`
+- Fix bugs in `structureFromBioPDB()` where some options weren't handled properly
 
 # 2.1.0
 
