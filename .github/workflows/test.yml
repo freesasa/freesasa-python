@@ -1,5 +1,5 @@
 name: Run tests
-run-name: ${{github-actor}} testsing freesasa-python
+run-name: ${{ github.actor }} testsing freesasa-python
 on: [push]
 jobs:
   Run-Tests:
