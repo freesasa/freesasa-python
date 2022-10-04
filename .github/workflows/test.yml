@@ -1,12 +1,9 @@
 name: Run tests
-run-name: ${{ github.actor }} testsing freesasa-python
+run-name: ${{ github.actor }} testing freesasa-python
 on: [push]
 jobs:
-  build:
+  Test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - name: "Check out code"
         uses: actions/checkout@v3
@@ -15,7 +12,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
           cache: "pip"
       - name: Install dependencies
         run: |
