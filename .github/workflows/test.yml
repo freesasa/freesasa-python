@@ -1,0 +1,12 @@
+name: Run tests
+run-name: ${{github-actor}} testsing freesasa-python
+on: [push]
+jobs:
+  Run-Tests:
+  steps:
+    - run: echo "Running GHA"
+    - name: "Check out code"
+      uses: actions/checkout@v3
+    - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
