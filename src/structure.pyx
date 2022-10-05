@@ -1,5 +1,8 @@
+import string
+import warnings
 from cfreesasa cimport *
 from libc.stdio cimport FILE, fopen, fclose
+from libc.stdlib cimport malloc, realloc
 
 cdef class Structure:
     """
@@ -90,7 +93,8 @@ cdef class Structure:
         if classifier._isCClassifier():
             classifier._get_address(<size_t>&self._c_classifier)
 
-        self._c_options = Structure._get_structure_options(options)
+        Structure._validate_options(options)
+        self._c_options = Structure._get_bitfield_from_options(options)
 
         if fileName is None:
             self._c_structure = freesasa_structure_new()
@@ -372,19 +376,25 @@ cdef class Structure:
         return [coord[3*i], coord[3*i+1], coord[3*i+2]]
 
     @staticmethod
-    def _get_structure_options(param):
-        options = 0
-
+    def _validate_options(param):
         # check validity of options
         knownOptions = {'hetatm','hydrogen','join-models','separate-models',
-                        'separate-chains','skip-unknown','halt-at-unknown'}
-        unknownOptions = []
-        for key in param:
-            if not key in knownOptions:
-                unknownOptions.append(key)
+                        'separate-chains', 'chain-groups', 'skip-unknown', 'halt-at-unknown'}
+        unknownOptions = set(param.keys()).difference(knownOptions)
         if len(unknownOptions) > 0:
             raise AssertionError("Option(s): ",unknownOptions," unknown.")
+        
+        # 'chain-groups' additional checks
+        if param.get('chain-groups', False):
+            if param.get('separate-chains', False):
+                raise ValueError("'chain_groups' and 'separate-chains' cannot be set simultaneously.")
+            allowed_chars = set(string.ascii_lowercase + string.ascii_uppercase + '+')
+            if not all([character in allowed_chars for character in param['chain-groups']]):
+                raise ValueError("'{}' is not a valid chain-groups selection.".format(param['chain-groups']))
 
+    @staticmethod
+    def _get_bitfield_from_options(param):
+        options = 0
         # calculate bitfield
         if 'hetatm' in param and param['hetatm']:
             options |= FREESASA_INCLUDE_HETATM
@@ -423,8 +433,8 @@ def structureArray(fileName,
     Create array of structures from PDB file.
 
     Split PDB file into several structures by either by treating
-    chains separately, by treating each MODEL as a separate
-    structure, or both.
+    chains separately and/or by treating each MODEL as a separate
+    structure and/or grouping chains.
 
     Args:
         fileName (str): The PDB file.
@@ -449,33 +459,64 @@ def structureArray(fileName,
     assert fileName is not None
     # we need to have at least one of these
     assert(('separate-chains' in options and options['separate-chains'] is True)
-           or ('separate-models' in options and options['separate-models'] is True))
-    structure_options = Structure._get_structure_options(options)
+           or ('separate-models' in options and options['separate-models'] is True)
+           or (options.get('chain-groups', False)))
+
+    Structure._validate_options(options)
+    structure_options = Structure._get_bitfield_from_options(options)
     cdef FILE *input
     input = fopen(fileName,'rb')
     if input is NULL:
         raise IOError("File '%s' could not be opened." % fileName)
-    cdef int n
 
     verbosity = getVerbosity()
 
     if classifier is not None:
         setVerbosity(silent)
-    cdef freesasa_structure** sArray = freesasa_structure_array(input,&n,NULL,structure_options)
+    
+    cdef int n
+    cdef freesasa_structure** sArray
+    if options.get('separate-chains', False) or options.get('separate-models', False):
+        sArray = freesasa_structure_array(input,&n,NULL,structure_options)
+    else:
+        sArray = <freesasa_structure **> malloc(sizeof(freesasa_structure *))
+        sArray[0] = freesasa_structure_from_pdb(input, NULL, structure_options)
+        n = 1
     fclose(input)
+
+    if sArray is NULL:
+        raise Exception("Problems reading structures in '%s'." % fileName)
+    if sArray[0] is NULL:
+        free(sArray)
+        raise Exception("Problems reading structures in '%s'." % fileName)
+
+    cdef freesasa_structure* group
+    if options.get('chain-groups', False):
+        # Add groups from each model
+        chain_groups = options['chain-groups'].split('+')
+        n_groups = len(chain_groups)
+        n_total = n * (1 + n_groups)
+        sArray = <freesasa_structure**> realloc(sArray, n_total * sizeof(freesasa_structure*))
+        if sArray is NULL:
+            raise Exception("Out of memory when allocating '%i' structures from '%s'." % (n_total, fileName))
+        for i in range(0, n):
+            for j, chainID_group in enumerate(chain_groups):
+                idx = j + (i * n_groups) + n
+                group = freesasa_structure_get_chains(sArray[i], chainID_group)
+                sArray[idx] = group
+        n = n_total
 
     if classifier is not None:
         setVerbosity(verbosity)
 
-    if sArray is NULL:
-        raise Exception("Problems reading structures in '%s'." % fileName)
     structures = []
-    for i in range(0,n):
+    for i in range(0, n):
         structures.append(Structure())
         structures[-1]._set_address(<size_t> &sArray[i])
         if classifier is not None:
             structures[-1].setRadiiWithClassifier(classifier)
     free(sArray)
+    
     return structures
 
 
@@ -504,7 +545,8 @@ def structureFromBioPDB(bioPDBStructure, classifier=None, options = Structure.de
     structure = Structure()
     if (classifier is None):
         classifier = Classifier()
-    optbitfield = Structure._get_structure_options(options)
+    Structure._validate_options(options)
+    optbitfield = Structure._get_bitfield_from_options(options)
 
     atoms = bioPDBStructure.get_atoms()
 

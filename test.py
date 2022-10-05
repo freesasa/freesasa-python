@@ -191,32 +191,42 @@ class FreeSASATestCase(unittest.TestCase):
         s.addAtom(' CA ', 'ALA','   1','A',1,1,1)
         self.assertEqual(s.radius(0), 1.87)
 
+
     def testStructureArray(self):
         # default separates chains, only uses first model (129 atoms per chain)
-        ss = structureArray("lib/tests/data/2jo4.pdb")
-        self.assertTrue(len(ss) == 4)
-        for s in ss:
-            self.assertTrue(s.nAtoms() == 129)
+        ss = structureArray("lib/tests/data/2jo4.pdb", {"separate-chains": False,
+            "chain-groups": "AD+B"})
+        self.assertTrue(len(ss) == 3)
+        
+        self.assertTrue(ss[0].nAtoms() == 129 * 4)
+        self.assertTrue(ss[1].nAtoms() == 129 * 2)
+        self.assertTrue(ss[2].nAtoms() == 129)
 
-        # include all models, separate chains, and include hydrogen and hetatm (286 atoms per chain)
+        # include all models, separate chains and include hydrogens and hetatms (286 atoms per chain)
         setVerbosity(nowarnings)
-        ss = structureArray("lib/tests/data/2jo4.pdb",{'separate-models' : True,
-                                                 'hydrogen' : True,
-                                                 'hetatm' : True,
-                                                 'separate-chains' : True})
-        self.assertTrue(len(ss) == 4*10)
-        for s in ss:
-            self.assertTrue(s.nAtoms() == 286)
 
-        # include all models, and include hydrogen and hetatm (286 atoms per chain)
         ss = structureArray("lib/tests/data/2jo4.pdb",{'separate-models' : True,
                                              'hydrogen' : True,
                                              'hetatm' : True})
         self.assertTrue(len(ss) == 10)
         for s in ss:
             self.assertTrue(s.nAtoms() == 286*4)
-        setVerbosity(normal)
+        
+        # include all models, separate in groups and include hydrogens and hetatms (286 atoms per chain)
+        ss = structureArray("lib/tests/data/2jo4.pdb",{'separate-models' : True,
+                                                 'hydrogen' : True,
+                                                 'hetatm' : True,
+                                                 'separate-chains' : False,
+                                                 "chain-groups": "AD+C"})
+        self.assertTrue(len(ss) == 2*10+10)
+        for i in range(10):
+            self.assertTrue(ss[i].nAtoms() == 286*4)
+        for i in range(10, 30, 2):
+            self.assertTrue(ss[i].nAtoms() == 286*2)
+        for i in range(11, 30, 2):
+            self.assertTrue(ss[i].nAtoms() == 286)
 
+        setVerbosity(normal)
         # check that the structures initialized this way can be used for calculations
         ss = structureArray("lib/tests/data/1ubq.pdb")
         self.assertTrue(len(ss) == 1)
