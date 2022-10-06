@@ -35,8 +35,9 @@ jobs:
         # same source for all versions
         if: ${{ matrix.os == 'macos-latest' && matrix.python.version == '3.10' }}
         run: python setup.py sdist
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish package on Mac and Linux
+        if: ${{ matrix.os == 'macos-latest' || matrix.os == 'ubunut-latest' }}
+        run: twine upload --skip-existing --username=__token__ --passwod=${{ secrets.PYPI_API_TOKEN }} dist/*
+      - name: Publish package on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: twine upload --skip-existing --username=__token__ --passwod=${{ secrets.PYPI_API_TOKEN }} dist\*
