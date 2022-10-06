@@ -35,9 +35,9 @@ jobs:
         run: python setup.py bdist_wheel
       - name: Build sdist
         # same source for all versions
-        if: ${{ matrix.os == 'macos-latest' && matrix.python.version == '3.10' }}
+        if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '3.10' }}
         run: python setup.py sdist
-      - name: Publish package on Mac and Linux
+      - name: Publish package on Mac
         if: ${{ matrix.os == 'macos-latest' }}
         run: twine upload --skip-existing dist/*
       - name: Publish package on Windows
