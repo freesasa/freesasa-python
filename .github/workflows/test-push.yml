@@ -3,6 +3,8 @@ run-name: ${{ github.actor }} testing freesasa-python
 on: push
 jobs:
   Test:
+    env:
+      USE_CYTHON: 1
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -22,6 +24,4 @@ jobs:
           pip install -r requirements.txt
           python setup.py install
       - name: Run tests
-        env:
-          USE_CYTHON: 1
         run: python setup.py test
