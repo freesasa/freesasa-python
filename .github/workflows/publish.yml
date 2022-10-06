@@ -1,4 +1,4 @@
-name: Run tests on several python versions
+name: Publish PyPi package for all platforms
 run-name: ${{ github.actor }} testing freesasa-python
 on:
   release:
@@ -9,7 +9,7 @@ jobs:
       USE_CYTHON: 1
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10"]
     runs-on: ${{ matrix.os }}
     steps:
