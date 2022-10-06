@@ -1,7 +1,7 @@
 # FreeSASA Python module
 
 The module provides Python bindings for the [FreeSASA C Library](https://github.com/mittinatten/freesasa).
-There are PyPi packages for Python 3.6+, on Linux, Mac OS X and Windows.
+There are PyPi packages for Python 3.7+, on Linux, Mac OS X and Windows.
 And it can be built from source for 2.7+ (Or by downloading older PyPi packages).
 Documentation can be found at http://freesasa.github.io/python/.
 
