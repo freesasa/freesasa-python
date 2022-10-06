@@ -5,14 +5,11 @@ jobs:
   Test:
     env:
       USE_CYTHON: 1
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: "Check out code"
         uses: actions/checkout@v3
-      - name: "Get git submodules"
+      - name: "Get upstream C library"
         run: git submodule update --init
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
