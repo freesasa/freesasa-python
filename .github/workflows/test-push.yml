@@ -1,6 +1,8 @@
 name: Run tests
 run-name: ${{ github.actor }} testing freesasa-python
-on: [push]
+on:
+  push:
+    branches-ignore: master
 jobs:
   Test:
     runs-on: ubuntu-latest
