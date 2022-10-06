@@ -4,7 +4,7 @@ on:
   release:
     types: [published]
 jobs:
-  Test:
+  Publish:
     env:
       USE_CYTHON: 1
     strategy:
