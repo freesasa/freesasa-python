@@ -1,6 +1,12 @@
 name: Run tests
 run-name: ${{ github.actor }} testing freesasa-python
-on: push
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - master
 jobs:
   Test:
     env:
