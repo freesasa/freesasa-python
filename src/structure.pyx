@@ -383,11 +383,11 @@ cdef class Structure:
         unknownOptions = set(param.keys()).difference(knownOptions)
         if len(unknownOptions) > 0:
             raise AssertionError("Option(s): ",unknownOptions," unknown.")
-        
+
         # 'chain-groups' additional checks
         if param.get('chain-groups', False):
             if param.get('separate-chains', False):
-                raise ValueError("'chain_groups' and 'separate-chains' cannot be set simultaneously.")
+                raise ValueError("'chain-groups' and 'separate-chains' cannot be set simultaneously.")
             allowed_chars = set(string.ascii_lowercase + string.ascii_uppercase + '+')
             if not all([character in allowed_chars for character in param['chain-groups']]):
                 raise ValueError("'{}' is not a valid chain-groups selection.".format(param['chain-groups']))
@@ -473,7 +473,7 @@ def structureArray(fileName,
 
     if classifier is not None:
         setVerbosity(silent)
-    
+
     cdef int n
     cdef freesasa_structure** sArray
     if options.get('separate-chains', False) or options.get('separate-models', False):
@@ -516,7 +516,7 @@ def structureArray(fileName,
         if classifier is not None:
             structures[-1].setRadiiWithClassifier(classifier)
     free(sArray)
-    
+
     return structures
 
 
