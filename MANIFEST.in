@@ -1,1 +1,1 @@
-include LICENSE.txt config.h src/cfreesasa.pxd src/freesasa.pyx
+include LICENSE.txt config.h src/cfreesasa.pxd src/*.pyx
