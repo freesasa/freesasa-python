@@ -74,6 +74,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         # Will also build for python 2.7 but not officialy supported
     ],
     setup_requires=['cython>=0.29.13'],
