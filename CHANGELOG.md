@@ -1,6 +1,6 @@
 # Changelog
 
-# 2.2.0 Pre-release
+# 2.2.0
 
 - Add `Result.write_pdb()`
 - Add `Structre.addAtoms()`
