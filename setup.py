@@ -56,7 +56,7 @@ long_description = \
 
 setup(
     name='freesasa',
-    version= '2.2.0-rc.1',
+    version= '2.2.0rc2',
     description='Calculate solvent accessible surface areas of proteins',
     long_description=long_description,
     author='Simon Mitternacht',

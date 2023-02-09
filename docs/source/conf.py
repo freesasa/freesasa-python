@@ -23,9 +23,9 @@ copyright = '2020, Simon Mitternacht'
 author = 'Simon Mitternacht'
 
 # The short X.Y version
-version = ''
+version = '2.2.0'
 # The full version, including alpha/beta/rc tags
-release = '2.1.0b1'
+release = '2.2.0'
 
 
 # -- General configuration ---------------------------------------------------

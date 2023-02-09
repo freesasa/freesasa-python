@@ -12,7 +12,7 @@ It can be installed using
 
    pip install freesasa
 
-Binaries are available for Python 2.7, 3.5, 3.6 and 3.7 for Mac OS X
+Binaries are available for Python 3.7-3.11 for Mac OS X
 and Windows, in addition to the source distribution.
 
 
@@ -151,7 +151,7 @@ and the calculation can be performed the normal way using this
 structure.
 
 Writing a FreeSASA PDB
--------
+----------------------
 
 Here is a simple example on how to turn a calculated result into a PDB file.
 
@@ -164,4 +164,4 @@ Here is a simple example on how to turn a calculated result into a PDB file.
     result = freesasa.calc(structure)
     result.write_pdb('2ubq.sasa.pdb')
 
-This only works if the input file was parsed with `Freesasa.Structure()`. 
+This only works if the input file was parsed with `Freesasa.Structure()`.
