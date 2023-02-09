@@ -23,7 +23,7 @@ jobs:
       - name: "Get upstream C library"
         run: git submodule update --init
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4.3.0
         with:
           cache: "pip"
           python-version: ${{ matrix.python-version }}
