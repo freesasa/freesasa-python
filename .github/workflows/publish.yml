@@ -11,7 +11,7 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest] # we'll use the sdist for linux
+        os: [macos-latest, windows-latest, ubuntu-latest] # we'll use the sdist for linux
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         exclude:
           - os: macos-latest
@@ -40,7 +40,7 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '3.10' }}
         run: python setup.py sdist
       - name: Publish package on Mac
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest' }}
         run: twine upload --skip-existing dist/*
       - name: Publish package on Windows
         if: ${{ matrix.os == 'windows-latest' }}
