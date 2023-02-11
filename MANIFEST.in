@@ -1,1 +1,4 @@
 include LICENSE.txt config.h src/cfreesasa.pxd src/*.pyx
+
+include lib/src/lexer.h lib/src/classifier.h lib/src/pdb.h lib/src/freesasa.h \
+  lib/src/parser.h lib/src/coord.h lib/src/freesasa_internal.h lib/src/selection.h lib/src/nb.h
