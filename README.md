@@ -11,6 +11,12 @@ Install the module by
 pip install freesasa
 ```
 
+Or, alternatively, by using conda
+
+```sh
+conda install freesasa
+```
+
 Developers can clone the library, and then build the module by the following
 
 ```sh
