@@ -14,7 +14,7 @@ pip install freesasa
 Or, alternatively, by using conda
 
 ```sh
-conda install freesasa
+conda install -c conda-forge freesasa
 ```
 
 Developers can clone the library, and then build the module by the following
