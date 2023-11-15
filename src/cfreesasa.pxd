@@ -135,9 +135,10 @@ cdef extern from "freesasa.h":
                                                   const freesasa_classifier* classifier,
                                                   int options)
 
-    freesasa_structure* freesasa_structure_get_chains(
-                                                const freesasa_structure *structure,
-                                                const char *chains)
+    freesasa_structure* freesasa_structure_get_chains(const freesasa_structure *structure,
+                                                      const char *chains,
+                                                      const freesasa_classifier *classifier,
+                                                      int options)
 
     freesasa_structure* freesasa_structure_new()
 

@@ -502,7 +502,7 @@ def structureArray(fileName,
         for i in range(0, n):
             for j, chainID_group in enumerate(chain_groups):
                 idx = j + (i * n_groups) + n
-                group = freesasa_structure_get_chains(sArray[i], chainID_group)
+                group = freesasa_structure_get_chains(sArray[i], chainID_group, NULL, structure_options)
                 sArray[idx] = group
         n = n_total
 
