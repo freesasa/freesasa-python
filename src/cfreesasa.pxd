@@ -75,6 +75,10 @@ cdef extern from "freesasa.h":
                                          int n,
                                          const freesasa_parameters *parameters)
 
+    freesasa_result** freesasa_calc_structures_parallel(const freesasa_structure **structures,
+                                                         const freesasa_parameters *parameters,
+                                                         int n)
+
     void freesasa_result_free(freesasa_result *result)
 
     freesasa_classifier* freesasa_classifier_from_file(FILE *file)

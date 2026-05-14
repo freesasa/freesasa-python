@@ -1,0 +1,328 @@
+/**
+ * This source file contains everything that is in freesasa.h
+ * interface and does not have a natural home in any of the other
+ * source files.
+ */
+
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "freesasa_internal.h"
+
+#ifdef PACKAGE_VERSION
+const char *freesasa_version = PACKAGE_VERSION;
+#else
+const char *freesasa_version = "";
+#endif
+
+#ifdef PACKAGE_STRING
+const char *freesasa_string = PACKAGE_STRING;
+#else
+const char *freesasa_string = "FreeSASA";
+#endif
+
+/* Use OpenMP runtime to detect default thread count.
+   Falls back to 1 if OpenMP is not available. */
+#if USE_OPENMP
+#include <omp.h>
+static int get_default_threads(void) {
+    int nt = omp_get_max_threads();
+    return nt > 0 ? nt : 1;
+}
+#define DEF_NUMBER_THREADS get_default_threads()
+#else
+#define DEF_NUMBER_THREADS 1
+#endif
+/* Expose default thread count — evaluated at first use */
+const int FREESASA_DEF_NUMBER_THREADS = 1; /* safe static default */
+
+const freesasa_parameters freesasa_default_parameters = {
+    FREESASA_DEF_ALGORITHM,
+    FREESASA_DEF_PROBE_RADIUS,
+    FREESASA_DEF_SR_N,
+    FREESASA_DEF_LR_N,
+    1  /* will be overridden by CLI or API callers */};
+
+static freesasa_result *
+result_new(int n)
+{
+    freesasa_result *result = malloc(sizeof(freesasa_result));
+
+    if (result == NULL) {
+        mem_fail();
+        return NULL;
+    }
+
+    result->sasa = malloc(sizeof(double) * n);
+
+    if (result->sasa == NULL) {
+        mem_fail();
+        freesasa_result_free(result);
+        return NULL;
+    }
+
+    result->n_atoms = n;
+
+    return result;
+}
+
+void freesasa_result_free(freesasa_result *r)
+{
+    if (r) {
+        free(r->sasa);
+        free(r);
+    }
+}
+
+freesasa_result *
+freesasa_calc(const coord_t *c,
+              const double *radii,
+              const freesasa_parameters *parameters)
+
+{
+    freesasa_result *result;
+    int ret = FREESASA_SUCCESS, i;
+
+    assert(c);
+    assert(radii);
+
+    result = result_new(freesasa_coord_n(c));
+
+    if (result == NULL) {
+        fail_msg("");
+        return NULL;
+    }
+
+    if (parameters == NULL) parameters = &freesasa_default_parameters;
+
+    switch (parameters->alg) {
+    case FREESASA_SHRAKE_RUPLEY:
+        ret = freesasa_shrake_rupley(result->sasa, c, radii, parameters);
+        break;
+    case FREESASA_LEE_RICHARDS:
+        ret = freesasa_lee_richards(result->sasa, c, radii, parameters);
+        break;
+    default:
+        assert(0); /* should never get here */
+        break;
+    }
+    if (ret == FREESASA_FAIL) {
+        freesasa_result_free(result);
+        return NULL;
+    }
+
+    result->total = 0;
+    for (i = 0; i < freesasa_coord_n(c); ++i) {
+        result->total += result->sasa[i];
+    }
+    result->parameters = *parameters;
+
+    return result;
+}
+
+freesasa_result *
+freesasa_calc_coord(const double *xyz,
+                    const double *radii,
+                    int n,
+                    const freesasa_parameters *parameters)
+{
+    coord_t *coord = NULL;
+    freesasa_result *result = NULL;
+
+    assert(xyz);
+    assert(radii);
+    assert(n > 0);
+
+    coord = freesasa_coord_new_linked(xyz, n);
+    if (coord != NULL) result = freesasa_calc(coord, radii, parameters);
+    if (result == NULL) fail_msg("");
+
+    freesasa_coord_free(coord);
+
+    return result;
+}
+
+freesasa_result *
+freesasa_calc_structure(const freesasa_structure *structure,
+                        const freesasa_parameters *parameters)
+{
+    assert(structure);
+
+    return freesasa_calc(freesasa_structure_xyz(structure),
+                         freesasa_structure_radius(structure),
+                         parameters);
+}
+
+freesasa_result **
+freesasa_calc_structures_parallel(const freesasa_structure **structures,
+                                  const freesasa_parameters *parameters,
+                                  int n)
+{
+    if (n <= 0) {
+        fail_msg("freesasa_calc_structures_parallel: n must be > 0");
+        return NULL;
+    }
+    if (!structures) {
+        fail_msg("freesasa_calc_structures_parallel: structures is NULL");
+        return NULL;
+    }
+    if (parameters == NULL) parameters = &freesasa_default_parameters;
+
+    freesasa_result **results = calloc(n, sizeof(freesasa_result *));
+    if (!results) { mem_fail(); return NULL; }
+
+    /* Each frame uses a single-threaded calculation.
+     * n_threads from the parameters struct drives frame-level parallelism. */
+    int n_parallel = parameters->n_threads > 0 ? parameters->n_threads : 1;
+
+    /* Build single-threaded params for the inner calc */
+    freesasa_parameters frame_params = *parameters;
+    frame_params.n_threads = 1;
+
+    int had_error = 0;
+
+#if USE_OPENMP
+    #pragma omp parallel for schedule(dynamic, 1) num_threads(n_parallel) \
+        default(none) shared(structures, results, frame_params, n, had_error)
+    for (int i = 0; i < n; ++i) {
+        if (had_error) continue; /* don't launch more work after an error */
+        freesasa_result *r = freesasa_calc_structure(structures[i], &frame_params);
+        if (r == NULL) {
+            #pragma omp atomic write
+            had_error = 1;
+        }
+        results[i] = r;
+    }
+#else
+    for (int i = 0; i < n; ++i) {
+        results[i] = freesasa_calc_structure(structures[i], &frame_params);
+        if (results[i] == NULL) { had_error = 1; break; }
+    }
+#endif
+
+    if (had_error) {
+        for (int i = 0; i < n; ++i) freesasa_result_free(results[i]);
+        free(results);
+        fail_msg("freesasa_calc_structures_parallel: one or more frames failed");
+        return NULL;
+    }
+
+    return results;
+}
+
+freesasa_node *
+freesasa_calc_tree(const freesasa_structure *structure,
+                   const freesasa_parameters *parameters,
+                   const char *name)
+{
+    freesasa_node *tree = NULL;
+    freesasa_result *result;
+
+    assert(structure);
+
+    result = freesasa_calc(freesasa_structure_xyz(structure),
+                           freesasa_structure_radius(structure),
+                           parameters);
+
+    if (result != NULL) {
+        tree = freesasa_tree_init(result, structure, name);
+    } else {
+        fail_msg("");
+    }
+
+    if (tree == NULL) {
+        fail_msg("");
+    }
+
+    freesasa_result_free(result);
+
+    return tree;
+}
+
+static inline void
+count_err(int return_value, int *n_err)
+{
+    if (return_value == FREESASA_FAIL) {
+        (*n_err)++;
+    }
+}
+
+int freesasa_tree_export(FILE *file,
+                         freesasa_node *root,
+                         int options)
+{
+    int n_err = 0;
+
+    assert(freesasa_node_type(root) == FREESASA_NODE_ROOT);
+
+    if (options & FREESASA_LOG) {
+        count_err(freesasa_write_log(file, root), &n_err);
+    }
+    if (options & FREESASA_RES) {
+        count_err(freesasa_write_res(file, root), &n_err);
+    }
+    if (options & FREESASA_SEQ) {
+        count_err(freesasa_write_seq(file, root), &n_err);
+    }
+    if (options & FREESASA_PDB) {
+        count_err(freesasa_write_pdb(file, root), &n_err);
+    }
+    if (options & FREESASA_RSA) {
+        count_err(freesasa_write_rsa(file, root, options), &n_err);
+    }
+    if (options & FREESASA_JSON) {
+#if USE_JSON
+        count_err(freesasa_write_json(file, root, options), &n_err);
+#else
+        return fail_msg("library was built without support for JSON output");
+#endif
+    }
+    if (options & FREESASA_XML) {
+#if USE_XML
+        count_err(freesasa_write_xml(file, root, options), &n_err);
+#else
+        return fail_msg("library was built without support for XML output");
+#endif
+    }
+    if (n_err > 0) {
+        return fail_msg("there were errors when writing output");
+    }
+    return FREESASA_SUCCESS;
+}
+
+freesasa_result *
+freesasa_result_clone(const freesasa_result *result)
+{
+    freesasa_result *clone = result_new(result->n_atoms);
+
+    if (clone == NULL) {
+        fail_msg("");
+        return NULL;
+    }
+
+    clone->n_atoms = result->n_atoms;
+    clone->total = result->total;
+    clone->parameters = result->parameters;
+    memcpy(clone->sasa, result->sasa, sizeof(double) * clone->n_atoms);
+
+    return clone;
+}
+
+const char *
+freesasa_alg_name(freesasa_algorithm alg)
+{
+    switch (alg) {
+    case FREESASA_SHRAKE_RUPLEY:
+        return "Shrake & Rupley";
+    case FREESASA_LEE_RICHARDS:
+        return "Lee & Richards";
+    default:
+        // This should never happen
+        assert(0 && "Illegal algorithm");
+        return "Unknown algorithm";
+    }
+}
