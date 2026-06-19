@@ -31,17 +31,49 @@ extensions = None
 ext = '.pyx' if USE_CYTHON else '.c'
 sources.append(os.path.join('src', 'freesasa' + ext))
 
-compile_args=['-DHAVE_CONFIG_H']
+compile_args = ['-DHAVE_CONFIG_H', '-DUSE_OPENMP=1', '-DUSE_THREADS=1',
+                '-DUSE_JSON=0', '-DUSE_XML=0', '-DUSE_CHECK=0',
+                '-DFREESASA_DEF_ALGORITHM=FREESASA_LEE_RICHARDS',
+                '-DFREESASA_DEF_PROBE_RADIUS=1.4',
+                '-DFREESASA_DEF_SR_N=100', '-DFREESASA_DEF_LR_N=20',
+                '-DPACKAGE_VERSION="2.1.3-omp"',
+                '-DREPORTBUG="Report bugs"',
+                '-DHOMEPAGE="http://freesasa.github.io"',
+                '-DFREESASA_XMLNS="http://freesasa.github.io/"']
+link_args = []
 
 if os.name == 'posix':
     compile_args.append('-std=gnu99')
+    import subprocess
+    try:
+        subprocess.check_output(['gcc', '-fopenmp', '-x', 'c', '-', '-o', '/dev/null'],
+                                input=b'int main(){}', stderr=subprocess.DEVNULL)
+        compile_args.append('-fopenmp')
+        link_args.append('-fopenmp')
+    except Exception:
+        print("WARNING: OpenMP not detected, falling back to single-threaded")
+
+# Enable native SIMD optimizations (-march=native -O3 -ffast-math) when available.
+# Set FREESASA_NO_NATIVE=1 to disable (e.g. when building portable wheels).
+if not os.environ.get('FREESASA_NO_NATIVE'):
+    try:
+        subprocess.check_output(
+            ['gcc', '-march=native', '-x', 'c', '-', '-o', '/dev/null'],
+            input=b'int main(){}', stderr=subprocess.DEVNULL)
+        compile_args += ['-march=native', '-O3', '-ffast-math']
+        print("SIMD: -march=native -O3 -ffast-math enabled")
+    except Exception:
+        print("SIMD: -march=native not available, using default optimization")
+else:
+    print("SIMD: native optimization disabled (FREESASA_NO_NATIVE set)")
 
 extension_src = [
     Extension("freesasa", sources,
               language='c',
               include_dirs=[os.path.join('lib', 'src'), '.'],
-              extra_compile_args = compile_args
-	      )
+              extra_compile_args=compile_args,
+              extra_link_args=link_args,
+              )
 ]
 
 if USE_CYTHON:

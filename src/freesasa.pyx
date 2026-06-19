@@ -37,7 +37,7 @@ normal = FREESASA_V_NORMAL
 debug = FREESASA_V_DEBUG
 
 
-def calc(structure,parameters=None):
+def calc(structure, parameters=None):
     """
     Calculate SASA of Structure
 
@@ -56,13 +56,80 @@ def calc(structure,parameters=None):
     if parameters is not None:  parameters._get_address(<size_t>&p)
     structure._get_address(<size_t>&s)
     result = Result()
-    result._c_result = <freesasa_result*> freesasa_calc_structure(s,p)
+    result._c_result = <freesasa_result*> freesasa_calc_structure(s, p)
     result._c_root_node = <freesasa_node*> freesasa_tree_init(result._c_result,
                                                               s, "Structure")
     if result._c_result is NULL:
         raise Exception("Error calculating SASA.")
 
     return result
+
+
+def calcStructuresParallel(structures, parameters=None):
+    """
+    Calculate SASA for multiple structures in parallel (trajectory mode).
+
+    Each structure is computed concurrently; ``parameters.nThreads()``
+    controls how many frames run at the same time.  This is the
+    recommended approach for MD trajectory analysis — it gives
+    near-linear speedup with the number of frames.
+
+    Example — process a list of pre-built :py:class:`.Structure` objects::
+
+        params = freesasa.Parameters()
+        params.setNThreads(8)   # 8 frames processed simultaneously
+        results = freesasa.calcStructuresParallel(frame_structures, params)
+        total_areas = [r.totalArea() for r in results]
+
+    Args:
+        structures (list): List of :py:class:`.Structure` objects.
+        parameters: :py:class:`.Parameters` to use.  ``nThreads()``
+            controls frame-level concurrency.  If ``None``, defaults are used.
+
+    Returns:
+        list: List of :py:class:`.Result` objects, one per input structure.
+
+    Raises:
+        Exception: if any frame calculation fails.
+    """
+    cdef const freesasa_parameters *p = NULL
+    cdef const freesasa_structure **s_arr
+    cdef freesasa_result **raw_results
+    cdef int n = len(structures)
+
+    if n == 0:
+        return []
+
+    if parameters is not None:
+        parameters._get_address(<size_t>&p)
+
+    # Build a C array of structure pointers
+    s_arr = <const freesasa_structure **> malloc(n * sizeof(freesasa_structure *))
+    if s_arr is NULL:
+        raise MemoryError("Could not allocate structure pointer array")
+
+    cdef const freesasa_structure *si
+    for i in range(n):
+        structures[i]._get_address(<size_t>&si)
+        s_arr[i] = si
+
+    raw_results = freesasa_calc_structures_parallel(s_arr, p, n)
+    free(s_arr)
+
+    if raw_results is NULL:
+        raise Exception("Error in parallel SASA calculation (one or more frames failed).")
+
+    # Wrap each C result in a Python Result object
+    py_results = []
+    for i in range(n):
+        r = Result()
+        r._c_result = raw_results[i]
+        py_results.append(r)
+
+    # Free the outer array (not the individual results — owned by py_results now)
+    free(raw_results)
+
+    return py_results
 
 def calcCoord(coord, radii, parameters=None):
     """
